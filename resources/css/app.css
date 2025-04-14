@@ -1,0 +1,407 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* @theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-white);
+        --color-accent-content: var(--color-white);
+        --color-accent-foreground: var(--color-neutral-800);
+    }
+} */
+
+@theme {
+    --color-accent: var(--color-sky-600);
+    --color-accent-content: var(--color-sky-600);
+    --color-accent-foreground: var(--color-white);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-sky-600);
+        --color-accent-content: var(--color-sky-400);
+        --color-accent-foreground: var(--color-white);
+    }
+}
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field] {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply  !mb-0 !leading-tight;
+}
+
+[data-current] {
+    @apply bg-accent text-accent-foreground;
+}
+
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
+
+/* @plugin "daisyui"; */
+
+
+
+.locationiq-bounds {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+    border-radius: 4px;
+}
+
+.locationiq-bounds a,
+.locationiq-bounds a:hover {
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+}
+
+.locationiq-bounds a,
+.layout-control-layers-toggle {
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.locationiq-bounds a:hover {
+    background-color: #f4f4f4;
+}
+
+.locationiq-bounds a:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.locationiq-bounds a:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom: none;
+}
+
+.locationiq-bounds a.leaflet-disabled {
+    cursor: default;
+    background-color: #f4f4f4;
+    color: #bbb;
+}
+
+/* control positioning */
+
+.locationiq-control {
+    position: relative;
+    z-index: 800;
+    pointer-events: visiblePainted;
+    /* IE 9-10 doesn't have auto */
+    pointer-events: auto;
+    float: left;
+    clear: both;
+    cursor: auto;
+}
+
+
+/* Copied leaflet bar to suggestions */
+
+/* .autocomplete-suggestions {
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+    border-radius: 4px;
+    z-index: 9999 !important;
+}
+
+.autocomplete-suggestions a,
+.autocomplete-suggestions a:hover {
+    background-color: #fff;
+    border-bottom: 1px solid #ccc;
+    width: 26px;
+    height: 26px;
+    line-height: 26px;
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: black;
+}
+
+.autocomplete-suggestions a,
+.layout-control-layers-toggle {
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.autocomplete-suggestions a:hover {
+    background-color: #f4f4f4;
+}
+
+.autocomplete-suggestions a:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.autocomplete-suggestions a:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom: none;
+}
+
+.autocomplete-suggestions a.leaflet-disabled {
+    cursor: default;
+    background-color: #f4f4f4;
+    color: #bbb;
+} */
+
+.locationiq-autocomplete-input {
+    /* box-sizing: border-box; */
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    border: none;
+    border-radius: 4px;
+    padding-left: 26px;
+    text-indent: 6px;
+    font-size: 14px;
+    background-color: transparent;
+    /* Should inherit color from control */
+    /* cursor: pointer; */
+
+}
+
+.locationiq-autocomplete-control {
+    width: 26px;
+    height: 26px;
+    background-color: white;
+    -webkit-transition: width .1s, height .1s;
+    -moz-transition: width .1s, height .1s;
+    -ms-transition: width .1s, height .1s;
+    -o-transition: width .1s, height .1s;
+    transition: width .1s, height .1s;
+    z-index: 810;
+    /* place above .locationiq-control; z-index is 7 in Leaflet v0.7, 800 in v1 */
+    box-sizing: content-box;
+}
+
+.locationiq-autocomplete-expanded {
+    width: 280px;
+    height: 44px;
+}
+
+.locationiq-autocomplete-expanded .locationiq-autocomplete-input {
+    padding-right: 30px;
+    /* Space for close button */
+    /*background-color: white; /* Only show background color when expanded */
+
+    /* The properties below should be tweaked if height of .locationiq-autocomplete-expanded is changed */
+    padding-top: 5px;
+    padding-bottom: 5px;
+    line-height: 32px;
+}
+
+.locationiq-reset-control {
+    display: none;
+    /* Do not show by default */
+    position: absolute;
+    right: 0;
+    width: 26px;
+    height: 100% !important;
+    padding-right: 2px;
+    text-align: center;
+    vertical-align: middle;
+    font: normal 18px/26px 'Lucida Console', Monaco, monospace;
+    background-color: transparent;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.locationiq-autocomplete-expanded .locationiq-reset-control {
+    display: table-cell;
+    /* Show when expanded by default */
+    background-color: inherit;
+    /* Masks input on IE8 */
+    border-top-right-radius: 4px;
+    /* Need to match input border radius if this has a solid background, overflow:hidden is not available; */
+    border-bottom-right-radius: 4px;
+}
+
+/* Plugin logic dictates when the reset button is hidden
+     while the search bar is expanded. This hidden helper class
+     is only ever used on the reset button */
+.locationiq-autocomplete-expanded .locationiq-reset-control.leaflet-locationiq-hidden {
+    display: none;
+}
+
+/* Vertical centering ghost element - IE8+ */
+.locationiq-reset-control:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.locationiq-autocomplete-search-icon {
+    position: absolute;
+    height: 100%;
+    background-image: url('https://maps.locationiq.com/v3/libs/autocomplete/images/search.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: 16px;
+    z-index: 10;
+    padding-left: 7px;
+}
+
+/* Overrides to .locationiq-bounds a */
+.locationiq-bounds a.locationiq-autocomplete-search-icon {
+    border-radius: 4px;
+    border-bottom: 0;
+    height: 100%;
+}
+
+/* Overrides to .locationiq-bounds a, which provides a white background
+     By making it transparent (unless hovered) it prevents situations
+     where the background color overlaps a parent element unexpectedly */
+.locationiq-bounds a.locationiq-autocomplete-search-icon:not(:hover) {
+    background-color: transparent;
+}
+
+/* When expanded, search icon doesn't need right-side radii */
+.locationiq-autocomplete-expanded a.locationiq-autocomplete-search-icon {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.locationiq-autocomplete-search-icon.leaflet-locationiq-loading {
+    background-image: url('https://maps.locationiq.com/v3/libs/autocomplete/images/loading.gif');
+}
+
+@media only screen and (min--moz-device-pixel-ratio: 1.25),
+only screen and (-o-min-device-pixel-ratio: 2.5/2),
+only screen and (-webkit-min-device-pixel-ratio: 1.25),
+only screen and (min-device-pixel-ratio: 1.25),
+only screen and (min-resolution: 120dpi),
+only screen and (min-resolution: 1.25dppx) {
+    .locationiq-autocomplete-search-icon {
+        background-image: url('https://maps.locationiq.com/v3/libs/autocomplete/images/search@2x.png');
+    }
+
+    .locationiq-autocomplete-search-icon.leaflet-locationiq-loading {
+        background-image: url('https://maps.locationiq.com/v3/libs/autocomplete/images/loading@2x.gif');
+    }
+}
+
+.locationiq-autocomplete-input:focus {
+    outline: none;
+    cursor: text;
+}
+
+.locationiq-autocomplete-input::-ms-clear {
+    display: none;
+}
+
+/* .autocomplete-suggestion {
+    font-size: 13px;
+    padding: 7px;
+    background-color: white;
+    border-top: 1px solid #f1f1f1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.autocomplete-suggestion-name {
+    line-height: 20px;
+}
+
+.autocomplete-suggestion-address {
+    font-size: 12px;
+    line-height: 12px;
+    color: #666;
+}
+
+.autocomplete-suggestion:first-child {
+    border: none;
+}
+
+.autocomplete-suggestion:hover {
+    background-color: #d5f1f3;
+    border-color: #d5f1f3;
+}
+
+.autocomplete-selected,
+.autocomplete-selected:hover {
+    background-color: #b2e3e7;
+    border-color: #b2e3e7;
+} */
+
+.locationiq-autocomplete-message {
+    font-size: 13px;
+    padding: 7px;
+    background-color: white;
+    overflow-x: auto;
+}
+
+
+#search-box {
+    padding-left: 20px;
+    padding-top: 20px;
+    width: 400px;
+    height: 100px;
+}
+
+#result {
+    padding-left: 20px;
+    padding-top: 20px;
+    width: 400px;
+    height: 100px;
+}
