@@ -132,7 +132,7 @@
                                                 wire:click="printBooking({{ $booking->id }})" variant="outline"
                                                 title="Print">
                                             </flux:button>
-                                            <flux:modal.trigger :name="'delete-booking-'.$booking - > id">
+                                            <flux:modal.trigger :name="'delete-booking-'.$booking->id">
                                                 <flux:button variant="danger" icon="trash" size="sm"
                                                     title="Delete"></flux:button>
                                             </flux:modal.trigger>
@@ -140,7 +140,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <flux:modal :name="'delete-booking-'.$booking - > id" class="min-w-[22rem]">
+                            <flux:modal :name="'delete-booking-'.$booking->id" class="min-w-[22rem]">
                                 <div class="space-y-6">
                                     <div>
                                         <flux:heading size="lg">Delete Booking?</flux:heading>
@@ -247,7 +247,7 @@
                                 <flux:button size="sm" icon="printer"
                                     wire:click="printBooking({{ $booking->id }})" variant="outline" title="Print">
                                 </flux:button>
-                                <flux:modal.trigger :name="'delete-booking-'.$booking - > id">
+                                <flux:modal.trigger :name="'delete-booking-'.$booking->id">
                                     <flux:button variant="danger" icon="trash" size="sm" title="Delete">
                                     </flux:button>
                                 </flux:modal.trigger>
@@ -354,7 +354,7 @@
                         <flux:label for="ticketQuantity" required>Quantity</flux:label>
                         <flux:input id="ticketQuantity" type="number" wire:model.live="ticketQuantity"
                             class="mt-1 w-full" min="1"
-                            :max="$selectedTicketId ? $tickets - > firstWhere('id', $selectedTicketId) ? - >
+                            :max="$selectedTicketId ? $tickets->firstWhere('id', $selectedTicketId) ?->
                                 max_tickets_per_booking : null" />
                         @error('ticketQuantity')
                             <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
