@@ -285,17 +285,17 @@
                             if (this.chart) {
                                 this.chart.destroy();
                             }
-
+                    
                             // Make sure chartData is defined
                             if (!$wire.chartData || !$wire.chartData.labels) {
                                 console.error('Chart data is not available yet');
                                 return;
                             }
-
+                    
                             // Create a clean copy of the data to avoid reference issues
                             const chartData = JSON.parse(JSON.stringify($wire.chartData));
                             console.log('Chart data:', chartData);
-
+                    
                             // Wait for the DOM to be fully updated
                             setTimeout(() => {
                                 const ctx = document.getElementById('dashboardChart')?.getContext('2d');
@@ -303,7 +303,7 @@
                                     console.error('Canvas context not available');
                                     return;
                                 }
-
+                    
                                 this.chart = new Chart(ctx, {
                                     type: 'line',
                                     data: {

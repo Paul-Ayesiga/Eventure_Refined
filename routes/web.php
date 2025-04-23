@@ -85,15 +85,28 @@ Route::middleware(['auth', 'verified', 'check.organiser'])->group(function () {
 Route::prefix('usr')->middleware(['auth', 'verified'])->group(function () {
     Route::redirect('settings', 'settings-usr/profile');
 
-    Route::view('settings/profile', 'user.settings.profile')->name('usr.settings.profile');
-    Route::view('settings/password', 'user.settings.password')->name('usr.settings.password');
-    Route::view('settings/appearance', 'user.settings.appearance')->name('usr.settings.appearance');
+    Route::get('settings/profile', [\App\Http\Controllers\User\UserController::class, 'profileSettings'])->name('usr.settings.profile');
+    Route::get('settings/password', [\App\Http\Controllers\User\UserController::class, 'passwordSettings'])->name('usr.settings.password');
+    Route::get('settings/appearance', [\App\Http\Controllers\User\UserController::class, 'appearanceSettings'])->name('usr.settings.appearance');
 
     // Platform routes
-    Route::view('dashboard', 'user.dashboard')->name('user-dashboard');
+    Route::get('dashboard', [\App\Http\Controllers\User\UserController::class, 'dashboard'])->name('user-dashboard');
+    Route::get('bookings', [\App\Http\Controllers\User\UserController::class, 'bookings'])->name('user.bookings');
 
     // Organization creation route
     Route::view('create-organisation', 'organisation.create')->name('create-organisation');
+});
+
+// Public user-facing routes
+Route::prefix('user')->group(function () {
+    // Events listing page
+    Route::get('/events', App\Livewire\User\Events::class)->name('user.events');
+
+    // Event detail page
+    Route::get('/events/{id}', App\Livewire\User\EventDetail::class)->name('user.event.detail');
+
+    // Booking process
+    Route::get('/events/{id}/book', App\Livewire\User\BookingProcess::class)->name('user.event.book');
 });
 
 

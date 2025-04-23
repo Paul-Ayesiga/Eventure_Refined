@@ -132,7 +132,7 @@
                                                 wire:click="printBooking({{ $booking->id }})" variant="outline"
                                                 title="Print">
                                             </flux:button>
-                                            <flux:modal.trigger :name="'delete-booking-'.$booking-> id">
+                                            <flux:modal.trigger :name="'delete-booking-'.$booking - > id">
                                                 <flux:button variant="danger" icon="trash" size="sm"
                                                     title="Delete"></flux:button>
                                             </flux:modal.trigger>
@@ -140,7 +140,7 @@
                                     </div>
                                 </td>
                             </tr>
-                            <flux:modal :name="'delete-booking-'.$booking-> id" class="min-w-[22rem]">
+                            <flux:modal :name="'delete-booking-'.$booking - > id" class="min-w-[22rem]">
                                 <div class="space-y-6">
                                     <div>
                                         <flux:heading size="lg">Delete Booking?</flux:heading>
@@ -247,7 +247,7 @@
                                 <flux:button size="sm" icon="printer"
                                     wire:click="printBooking({{ $booking->id }})" variant="outline" title="Print">
                                 </flux:button>
-                                <flux:modal.trigger :name="'delete-booking-'.$booking-> id">
+                                <flux:modal.trigger :name="'delete-booking-'.$booking - > id">
                                     <flux:button variant="danger" icon="trash" size="sm" title="Delete">
                                     </flux:button>
                                 </flux:modal.trigger>
@@ -275,7 +275,8 @@
                 </p>
             </div>
 
-            <form wire:submit.prevent="simulatePurchase">
+            <form
+                wire:submit.prevent="{{ $useStripePayment && !$clientSecret ? 'initializePayment' : 'simulatePurchase' }}">
                 <div class="space-y-4">
                     <!-- Customer Selection -->
                     <div>
@@ -353,7 +354,7 @@
                         <flux:label for="ticketQuantity" required>Quantity</flux:label>
                         <flux:input id="ticketQuantity" type="number" wire:model.live="ticketQuantity"
                             class="mt-1 w-full" min="1"
-                            :max="$selectedTicketId ? $tickets-> firstWhere('id', $selectedTicketId) ?->
+                            :max="$selectedTicketId ? $tickets - > firstWhere('id', $selectedTicketId) ? - >
                                 max_tickets_per_booking : null" />
                         @error('ticketQuantity')
                             <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
@@ -446,6 +447,54 @@
                         </div>
                     @endif
 
+                    <!-- Use Stripe Payment Toggle -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <flux:label>Use Stripe Payment</flux:label>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Process a real payment with Stripe</p>
+                        </div>
+                        <flux:switch wire:model.live="useStripePayment" />
+                    </div>
+
+                    <!-- Stripe Payment Form (shown when useStripePayment is true) -->
+                    @if ($useStripePayment)
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">Payment Information</h4>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Secure payment via Stripe</p>
+                            </div>
+
+                            @if ($clientSecret)
+                                <div id="payment-element" class="mb-4"></div>
+
+                                <div id="payment-message" class="text-sm text-red-500 mb-4 hidden"></div>
+
+                                <div class="flex justify-between">
+                                    <flux:button variant="ghost" wire:click="cancelPayment">Cancel Payment
+                                    </flux:button>
+                                    <flux:button id="submit-payment" variant="primary">
+                                        <span id="button-text">Pay Now</span>
+                                        <span id="spinner" class="hidden">Processing...</span>
+                                    </flux:button>
+                                </div>
+                            @else
+                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                                    <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                                        <span class="font-medium">Preparing payment form...</span>
+                                    </p>
+                                    <div class="flex justify-center">
+                                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300 mt-2">
+                                        Click "Initialize Payment" to start the payment process.
+                                    </p>
+
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
                     <!-- Join Waiting List -->
                     <div class="flex items-center justify-between">
                         <div>
@@ -458,7 +507,15 @@
 
                     <div class="flex justify-end gap-2">
                         <flux:button variant="ghost" wire:click="$set('isSimulating', false)">Cancel</flux:button>
-                        <flux:button type="submit" variant="primary">Create Booking</flux:button>
+                        <flux:button type="submit" variant="primary">
+                            @if ($useStripePayment && !$clientSecret)
+                                Initialize Payment
+                            @elseif ($useStripePayment && $clientSecret)
+                                Create Booking
+                            @else
+                                Create Booking
+                            @endif
+                        </flux:button>
                     </div>
                 </div>
             </form>
@@ -628,3 +685,155 @@
         </div>
     </flux:modal>
 </div>
+
+@push('scripts')
+    @if (config('cashier.key'))
+        <script src="https://js.stripe.com/v3/"></script>
+        <script>
+            let stripe = null;
+            let elements = null;
+            let paymentElement = null;
+
+            document.addEventListener('livewire:initialized', () => {
+                // Initialize Stripe
+                try {
+                    stripe = Stripe('{{ config('cashier.key') }}');
+                } catch (error) {
+                    console.error('Error initializing Stripe:', error);
+                }
+
+                // Listen for payment intent created event
+                @this.on('payment-intent-created', (data) => {
+                    const clientSecret = data.clientSecret;
+
+                    // Wait a moment for the DOM to update before setting up elements
+                    setTimeout(() => {
+                        setupStripeElements(clientSecret);
+                    }, 500);
+                });
+
+                // Also listen for Livewire updates that might affect the payment form
+                let lastClientSecret = null;
+                document.addEventListener('livewire:update', () => {
+                    const paymentContainer = document.getElementById('payment-element');
+                    if (paymentContainer && lastClientSecret && !paymentElement) {
+                        setupStripeElements(lastClientSecret);
+                    }
+                });
+
+                // Store the client secret when it's created
+                @this.on('payment-intent-created', (data) => {
+                    lastClientSecret = data.clientSecret;
+                });
+            });
+
+            function setupStripeElements(clientSecret) {
+                try {
+                    // Validate client secret
+                    if (!clientSecret || typeof clientSecret !== 'string' || !clientSecret.startsWith('pi_')) {
+                        console.error('Invalid client secret format');
+                        return;
+                    }
+
+                    // Clear any existing elements
+                    const paymentContainer = document.getElementById('payment-element');
+                    if (paymentContainer) {
+                        paymentContainer.innerHTML = '';
+                    } else {
+                        console.error('Payment container not found!');
+                        return;
+                    }
+                    // Create elements instance
+                    elements = stripe.elements({
+                        clientSecret: clientSecret,
+                        appearance: {
+                            theme: document.documentElement.classList.contains('dark') ? 'night' : 'stripe',
+                            variables: {
+                                colorPrimary: '#10b981', // teal-500
+                            }
+                        }
+                    });
+
+                    // Create and mount the Payment Element
+                    paymentElement = elements.create('payment');
+                    paymentElement.mount('#payment-element');
+
+                    // Handle form submission
+                    const submitButton = document.getElementById('submit-payment');
+                    if (submitButton) {
+                        submitButton.addEventListener('click', handleSubmit);
+                    } else {
+                        console.error('Submit button not found!');
+                    }
+                } catch (error) {
+                    console.error('Error setting up Stripe Elements:', error);
+                }
+            }
+
+            async function handleSubmit(e) {
+                e.preventDefault();
+
+                setLoading(true);
+
+                const messageContainer = document.getElementById('payment-message');
+                if (messageContainer) {
+                    messageContainer.classList.add('hidden');
+                    messageContainer.textContent = '';
+                } else {
+                    console.error('Message container not found!');
+                }
+
+                try {
+
+                    const {
+                        error
+                    } = await stripe.confirmPayment({
+                        elements,
+                        confirmParams: {
+                            return_url: window.location.href,
+                        },
+                        redirect: 'if_required'
+                    });
+
+                    if (error) {
+                        console.error('Payment error:', error.message);
+                        // Show error message
+                        if (messageContainer) {
+                            messageContainer.textContent = error.message;
+                            messageContainer.classList.remove('hidden');
+                        }
+                        setLoading(false);
+                    } else {
+
+                        // Payment succeeded
+                        setLoading(false);
+                        @this.call('handlePaymentSuccess');
+                    }
+                } catch (exception) {
+                    console.error('Exception during payment confirmation:', exception);
+                    if (messageContainer) {
+                        messageContainer.textContent = 'An unexpected error occurred. Please try again.';
+                        messageContainer.classList.remove('hidden');
+                    }
+                    setLoading(false);
+                }
+            }
+
+            function setLoading(isLoading) {
+                const submitButton = document.getElementById('submit-payment');
+                const spinner = document.getElementById('spinner');
+                const buttonText = document.getElementById('button-text');
+
+                if (isLoading) {
+                    submitButton.disabled = true;
+                    spinner.classList.remove('hidden');
+                    buttonText.classList.add('hidden');
+                } else {
+                    submitButton.disabled = false;
+                    spinner.classList.add('hidden');
+                    buttonText.classList.remove('hidden');
+                }
+            }
+        </script>
+    @endif
+@endpush

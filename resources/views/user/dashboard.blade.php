@@ -25,12 +25,17 @@
 
                 <!-- Dashboard actions -->
                 <div class="mt-6 space-y-4">
-                    <a href="#"
+                    <a href="{{ route('user.events') }}"
+                        class="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                        <flux:icon name="calendar" class="w-5 h-5 mr-2" />
+                        Browse Events
+                    </a>
+                    <a href="{{ route('user.bookings') }}"
                         class="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                         <flux:icon name="ticket" class="w-5 h-5 mr-2" />
-                        View My Tickets
+                        View My Bookings
                     </a>
-                    <a href="#"
+                    <a href="{{ route('usr.settings.profile') }}"
                         class="flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
                         <flux:icon name="user" class="w-5 h-5 mr-2" />
                         Update Profile

@@ -11,6 +11,9 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Stripe\StripeClient;
+use Laravel\Cashier\Cashier;
+use Illuminate\Support\Facades\Log;
 
 class Bookings extends Component
 {
@@ -34,6 +37,12 @@ class Bookings extends Component
     public $selectedEventDates = [];
     public $eventDates = [];
     public $selectedTicketRepeats = false;
+
+    // For payment processing
+    public $useStripePayment = false;
+    public $paymentIntentId = null;
+    public $clientSecret = null;
+    public $paymentStatus = 'pending';
 
     // For manual attendee information
     public $useCustomerAsAttendee = true;
@@ -195,6 +204,55 @@ class Bookings extends Component
         $this->selectedBooking = null;
     }
 
+    /**
+     * Initialize the payment process
+     */
+    public function initializePayment()
+    {
+        // Validate basic requirements
+        $this->validate([
+            'selectedCustomerId' => [
+                'required',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $customer = \App\Models\User::find($value);
+                    if (!$customer || !$customer->hasRole('user')) {
+                        $fail('Selected customer is not valid.');
+                    }
+                }
+            ],
+            'selectedTicketId' => [
+                'required',
+                'exists:tickets,id',
+                function ($attribute, $value, $fail) {
+                    $ticket = Ticket::find($value);
+
+                    if (!$ticket || $ticket->event_id !== $this->eventId) {
+                        $fail('Selected ticket is not valid for this event.');
+                    }
+                    if ($ticket->status !== 'active') {
+                        $fail('Selected ticket is not active.');
+                    }
+                }
+            ],
+            'ticketQuantity' => [
+                'required',
+                'integer',
+                'min:1'
+            ]
+        ]);
+
+        // Get customer and ticket
+        $customer = \App\Models\User::find($this->selectedCustomerId);
+        $ticket = Ticket::find($this->selectedTicketId);
+        $totalAmount = $ticket->price * $this->ticketQuantity;
+
+        // Create a payment intent
+        $this->createPaymentIntent($customer, $totalAmount);
+
+        $this->dispatch('toast', "Payment form initialized. Please complete the payment.", 'info', 'top-right');
+    }
+
     public function simulatePurchase()
     {
         // First validate basic requirements
@@ -229,6 +287,11 @@ class Bookings extends Component
                 'min:1'
             ]
         ];
+
+        // Add validation for payment method if using Stripe
+        if ($this->useStripePayment) {
+            $validationRules['paymentIntentId'] = 'required_if:useStripePayment,true';
+        }
 
         // Get the ticket to check if it's a repeating ticket
         $ticket = Ticket::find($this->selectedTicketId);
@@ -335,14 +398,36 @@ class Bookings extends Component
             ]
         ]);
 
+        // Calculate total amount
+        $totalAmount = $ticket->price * $this->ticketQuantity;
+
+        // If using Stripe payment, check payment status
+        if ($this->useStripePayment) {
+
+
+            // We need a payment intent ID to proceed
+            if (!$this->paymentIntentId) {
+                $this->dispatch('toast', "Please initialize payment first.", 'error', 'top-right');
+                return;
+            }
+
+            // Check payment status
+            $paymentStatus = $this->checkPaymentStatus();
+
+            if ($paymentStatus !== 'succeeded') {
+                $this->dispatch('toast', "Payment has not been completed. Please complete the payment.", 'error', 'top-right');
+                return;
+            }
+        }
+
         // Create booking data array
         $bookingData = [
             'event_id' => $this->eventId,
             'user_id' => $customer->id,
             'booking_reference' => 'TEST-' . Str::random(8),
-            'status' => 'confirmed',
-            'total_amount' => $ticket->price * $this->ticketQuantity,
-            'payment_status' => 'paid'
+            'status' => $this->useStripePayment ? 'confirmed' : 'confirmed',
+            'total_amount' => $totalAmount,
+            'payment_status' => $this->useStripePayment ? 'paid' : 'paid'
         ];
 
         // Create booking
@@ -415,7 +500,11 @@ class Bookings extends Component
             'isSimulating',
             'useCustomerAsAttendee',
             'selectedEventDates',
-            'selectedTicketRepeats'
+            'selectedTicketRepeats',
+            'useStripePayment',
+            'paymentIntentId',
+            'clientSecret',
+            'paymentStatus'
         ]);
 
         // Reset attendees array
@@ -445,6 +534,128 @@ class Bookings extends Component
 
         $this->dispatch('booking-changed');
         $this->dispatch('toast', 'Booking deleted successfully.', 'success', 'top-right');
+    }
+
+    /**
+     * Create a Stripe payment intent for the booking
+     */
+    public function createPaymentIntent($customer, $amount)
+    {
+        try {
+            // Get or create a Stripe customer
+            if (!$customer->stripe_id) {
+                $customer->createAsStripeCustomer([
+                    'email' => $customer->email,
+                    'name' => $customer->name
+                ]);
+            }
+
+            // Make sure we have a Stripe ID now
+            if (!$customer->stripe_id) {
+                throw new \Exception('Failed to create or retrieve Stripe customer ID');
+            }
+
+            // Create a payment intent
+            $stripe = new StripeClient(config('cashier.secret'));
+
+            // Make sure we have a valid currency
+            $currency = strtolower($this->event->currency ?: config('cashier.currency', 'usd'));
+
+
+
+            try {
+                // Create the payment intent
+                $paymentIntent = $stripe->paymentIntents->create([
+                    'amount' => (int)($amount * 100), // Convert to cents and ensure it's an integer
+                    'currency' => $currency,
+                    'customer' => $customer->stripe_id,
+                    'metadata' => [
+                        'event_id' => $this->eventId,
+                        'ticket_id' => $this->selectedTicketId,
+                        'quantity' => $this->ticketQuantity,
+                    ],
+                    'automatic_payment_methods' => [
+                        'enabled' => true,
+                    ],
+                ]);
+
+
+            } catch (\Stripe\Exception\ApiErrorException $e) {
+                Log::error('Stripe API error: ' . $e->getMessage());
+                throw $e;
+            }
+
+
+
+            $this->paymentIntentId = $paymentIntent->id;
+            $this->clientSecret = $paymentIntent->client_secret;
+
+            $this->dispatch('toast', "Payment intent created. Please complete the payment.", 'info', 'top-right');
+            // Dispatch the event with the client secret
+            // Note: We need to use a named parameter to prevent Livewire from wrapping it in an array
+            $this->dispatch('payment-intent-created', clientSecret: $this->clientSecret);
+
+        } catch (\Exception $e) {
+            Log::error('Error creating payment intent: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('toast', "Error creating payment: {$e->getMessage()}", 'error', 'top-right');
+        }
+    }
+
+    /**
+     * Check the status of a payment intent
+     */
+    public function checkPaymentStatus()
+    {
+        if (!$this->paymentIntentId) {
+            return 'requires_payment_method';
+        }
+
+        try {
+            $stripe = new StripeClient(config('cashier.secret'));
+            $paymentIntent = $stripe->paymentIntents->retrieve($this->paymentIntentId);
+            $this->paymentStatus = $paymentIntent->status;
+
+            return $paymentIntent->status;
+        } catch (\Exception $e) {
+            Log::error('Error checking payment status: ' . $e->getMessage());
+            return 'error';
+        }
+    }
+
+    /**
+     * Handle successful payment
+     */
+    public function handlePaymentSuccess()
+    {
+        $this->paymentStatus = 'succeeded';
+        $this->dispatch('toast', "Payment successful! Creating booking...", 'success', 'top-right');
+        $this->simulatePurchase(); // Continue with booking creation
+    }
+
+    /**
+     * Cancel the current payment intent
+     */
+    public function cancelPayment()
+    {
+        if ($this->paymentIntentId) {
+            try {
+                $stripe = new StripeClient(config('cashier.secret'));
+                $stripe->paymentIntents->cancel($this->paymentIntentId);
+
+                $this->reset([
+                    'paymentIntentId',
+                    'clientSecret',
+                    'paymentStatus'
+                ]);
+
+                $this->dispatch('toast', "Payment cancelled.", 'info', 'top-right');
+            } catch (\Exception $e) {
+                Log::error('Error cancelling payment: ' . $e->getMessage());
+            }
+        }
     }
 
     public function render()

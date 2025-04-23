@@ -153,16 +153,16 @@
                         if (this.chart) {
                             this.chart.destroy();
                         }
-                
+
                         // Make sure chartData is defined
                         if (!$wire.chartData || !$wire.chartData.labels) {
                             console.error('Bookings chart data is not available yet');
                             return;
                         }
-                
+
                         // Create a clean copy of the data to avoid reference issues
                         const chartData = JSON.parse(JSON.stringify($wire.chartData));
-                
+
                         // Wait for the DOM to be fully updated
                         setTimeout(() => {
                             const ctx = document.getElementById('bookingsChart')?.getContext('2d');
@@ -170,7 +170,7 @@
                                 console.error('Bookings canvas context not available');
                                 return;
                             }
-                
+
                             this.chart = new Chart(ctx, {
                                 type: 'line',
                                 data: {
@@ -208,8 +208,8 @@
                             });
                         }, 100);
                     }
-                }" x-init="$nextTick(() => { setTimeout(() => initChart(), 500); })"
-                    @chartDataUpdated.window="setTimeout(() => initChart(), 500)">
+                }"  x-init="initChart()" @chartDataUpdated.window="initChart()" x-effect="$watch('$wire.chartData', () => initChart())"
+                        x-effect="$watch('$wire.selectedPeriod', () => initChart())">
                     <canvas id="bookingsChart"></canvas>
                 </div>
             </div>
@@ -241,16 +241,16 @@
                         if (this.chart) {
                             this.chart.destroy();
                         }
-                
+
                         // Make sure chartData is defined
                         if (!$wire.chartData || !$wire.chartData.labels) {
                             console.error('Revenue chart data is not available yet');
                             return;
                         }
-                
+
                         // Create a clean copy of the data to avoid reference issues
                         const chartData = JSON.parse(JSON.stringify($wire.chartData));
-                
+
                         // Wait for the DOM to be fully updated
                         setTimeout(() => {
                             const ctx = document.getElementById('revenueChart')?.getContext('2d');
@@ -258,7 +258,7 @@
                                 console.error('Revenue canvas context not available');
                                 return;
                             }
-                
+
                             this.chart = new Chart(ctx, {
                                 type: 'line',
                                 data: {
@@ -309,8 +309,8 @@
                             });
                         }, 100);
                     }
-                }" x-init="$nextTick(() => { setTimeout(() => initChart(), 500); })"
-                    @chartDataUpdated.window="setTimeout(() => initChart(), 500)">
+                }" x-init="initChart()" @chartDataUpdated.window="initChart()" x-effect="$watch('$wire.chartData', () => initChart())"
+                        x-effect="$watch('$wire.selectedPeriod', () => initChart())">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
