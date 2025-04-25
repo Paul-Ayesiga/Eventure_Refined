@@ -51,6 +51,12 @@ class WaitingList extends Component
 
     public function notifySelected()
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot modify waiting list for archived events.', 'error', 'top-right');
+            return;
+        }
+
         if (empty($this->selectedEntries)) {
             $this->dispatch('toast', 'Please select entries to notify.', 'error', 'top-right');
             return;
@@ -69,6 +75,12 @@ class WaitingList extends Component
 
     public function removeSelected()
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot modify waiting list for archived events.', 'error', 'top-right');
+            return;
+        }
+
         if (empty($this->selectedEntries)) {
             $this->dispatch('toast', 'Please select entries to remove.', 'error', 'top-right');
             return;

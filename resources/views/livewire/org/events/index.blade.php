@@ -500,7 +500,21 @@ new class extends Component {
                         <!-- Event details -->
                         <div class="flex-1">
                             <div class="flex justify-between">
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $event->name }}</h3>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ $event->name }}
+                                    </h3>
+                                    @if ($event->isArchived())
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 mt-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1"
+                                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                            </svg>
+                                            Archived
+                                        </span>
+                                    @endif
+                                </div>
                                 <!-- Options button -->
                                 <flux:dropdown>
                                     <flux:button variant="ghost" icon="ellipsis-vertical" class="p-1">

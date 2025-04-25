@@ -74,6 +74,12 @@ class BookingProcess extends Component
         $this->eventId = $id;
         $this->loadEvent();
 
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            session()->flash('error', 'This event has been archived and is no longer available for booking.');
+            return redirect()->route('user.event.detail', $this->eventId);
+        }
+
         // Check if we have booking data in session
         if (session()->has('booking')) {
             $bookingData = session('booking');
@@ -168,6 +174,12 @@ class BookingProcess extends Component
 
     public function nextStep()
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'This event has been archived and is no longer available for booking.', 'error');
+            return redirect()->route('user.event.detail', $this->eventId);
+        }
+
         if ($this->currentStep === 1) {
             $this->validate([
                 'attendees.*.first_name' => 'required|string|max:255',
@@ -223,6 +235,12 @@ class BookingProcess extends Component
 
     public function completeBooking()
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'This event has been archived and is no longer available for booking.', 'error');
+            return redirect()->route('user.event.detail', $this->eventId);
+        }
+
         // Validate payment information
         $this->validate();
 

@@ -15,7 +15,20 @@
             </a>
 
             <!-- Event Title -->
-            <h1 class="text-white text-3xl md:text-5xl font-bold">{{ $event->name }}</h1>
+            <div class="flex items-center gap-3">
+                <h1 class="text-white text-3xl md:text-5xl font-bold">{{ $event->name }}</h1>
+                @if ($event->isArchived())
+                    <span
+                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Archived
+                    </span>
+                @endif
+            </div>
 
             <!-- Event Meta -->
             <div class="flex flex-wrap gap-4 mt-4">
@@ -175,7 +188,41 @@
             <!-- Ticket Selection & Checkout -->
             <div class="lg:col-span-1">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 sticky top-4">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Tickets</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Tickets</h2>
+                        @if ($event->isArchived())
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                                Archived
+                            </span>
+                        @endif
+                    </div>
+
+                    @if ($event->isArchived())
+                        <div
+                            class="mb-6 p-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 rounded-md">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="h-5 w-5 text-amber-500 dark:text-amber-400" viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-amber-700 dark:text-amber-300">This event has been archived
+                                        and is no longer available for booking.</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     @if (count($tickets) > 0)
                         <!-- Ticket Options -->
@@ -243,11 +290,19 @@
                         </div>
 
                         <!-- Checkout Button -->
-                        <button wire:click="proceedToBooking"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-medium transition-colors duration-300 {{ $totalTickets === 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
-                            @if ($totalTickets === 0) disabled @endif>
-                            Proceed to Checkout
-                        </button>
+                        @if ($event->isArchived())
+                            <button
+                                class="w-full bg-gray-400 text-white py-3 rounded-md font-medium cursor-not-allowed"
+                                disabled>
+                                Event Archived
+                            </button>
+                        @else
+                            <button wire:click="proceedToBooking"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-medium transition-colors duration-300 {{ $totalTickets === 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                @if ($totalTickets === 0) disabled @endif>
+                                Proceed to Checkout
+                            </button>
+                        @endif
                     @else
                         <div class="text-center py-8">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4"

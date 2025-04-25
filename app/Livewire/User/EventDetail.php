@@ -81,6 +81,12 @@ class EventDetail extends Component
 
     public function incrementTicket($ticketId)
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'This event has been archived and is no longer available for booking.', 'error');
+            return;
+        }
+
         $ticket = collect($this->tickets)->firstWhere('id', $ticketId);
         $maxPerBooking = $ticket->max_tickets_per_booking;
         $remainingQuantity = $ticket->quantity_available - $ticket->quantity_sold;
@@ -92,6 +98,12 @@ class EventDetail extends Component
 
     public function decrementTicket($ticketId)
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'This event has been archived and is no longer available for booking.', 'error');
+            return;
+        }
+
         if ($this->selectedTickets[$ticketId] > 0) {
             $this->selectedTickets[$ticketId]--;
         }
@@ -143,6 +155,12 @@ class EventDetail extends Component
 
     public function proceedToBooking()
     {
+        // Check if event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'This event has been archived and is no longer available for booking.', 'error');
+            return;
+        }
+
         if ($this->getTotalSelectedTickets() === 0) {
             $this->dispatch('toast', 'Please select at least one ticket', 'error');
             return;

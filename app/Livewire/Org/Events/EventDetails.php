@@ -350,7 +350,7 @@ class EventDetails extends Component
         $archivedAt = $this->event->archived_at->format('M d, Y');
         $deletionDate = $this->event->archived_at->addDays(30)->format('M d, Y');
 
-        return "This event was archived on {$archivedAt} and is now read-only. It will be permanently deleted on {$deletionDate}.";
+        return "This event was archived on {$archivedAt} and is now read-only. Its status has been set to 'Draft'. It will be permanently deleted on {$deletionDate}.";
     }
 
     public function render()

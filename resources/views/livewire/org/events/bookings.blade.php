@@ -563,8 +563,12 @@
                             <flux:label>Join Waiting List</flux:label>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Get notified when tickets become
                                 available</p>
+                            @if ($event->isArchived())
+                                <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">Waiting list is disabled for
+                                    archived events</p>
+                            @endif
                         </div>
-                        <flux:switch wire:model="joinWaitingList" />
+                        <flux:switch wire:model="joinWaitingList" :disabled="$event->isArchived()" />
                     </div>
 
                     <div class="flex justify-end gap-2">
@@ -669,10 +673,18 @@
                                                 Ticket: {{ $attendee->ticket->name }}
                                             </p>
                                             <div class="mt-2">
-                                                <flux:button size="xs" icon="ticket" variant="outline"
-                                                    wire:click="generateTicket({{ $attendee->id }})">
-                                                    Generate Ticket
-                                                </flux:button>
+
+                                                @if (!$event->isArchived())
+                                                    <flux:button size="xs" icon="ticket" variant="outline"
+                                                        wire:click="generateTicket({{ $attendee->id }})">
+                                                        Generate Ticket
+                                                    </flux:button>
+                                                @else
+                                                    <flux:button size="xs" icon="ticket" variant="outline" disabled
+                                                        title="Cannot generate tickets for archived events">
+                                                        Generate Ticket (Unavailable)
+                                                    </flux:button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -738,10 +750,17 @@
                         wire:click="printBooking({{ $selectedBooking->id }})">
                         Print
                     </flux:button>
-                    <flux:button type="button" icon="ticket" variant="primary"
-                        wire:click="generateTickets({{ $selectedBooking->id }})">
-                        Generate Tickets
-                    </flux:button>
+                    @if (!$event->isArchived())
+                        <flux:button type="button" icon="ticket" variant="primary"
+                            wire:click="generateTickets({{ $selectedBooking->id }})">
+                            Generate Tickets
+                        </flux:button>
+                    @else
+                        <flux:button type="button" icon="ticket" variant="primary" disabled
+                            title="Cannot generate tickets for archived events">
+                            Generate Tickets (Unavailable)
+                        </flux:button>
+                    @endif
                 </div>
             @endif
         </div>

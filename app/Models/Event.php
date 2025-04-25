@@ -117,11 +117,14 @@ class Event extends Model
 
     /**
      * Archive the event
+     *
+     * Sets the event as archived and changes status to Draft
      */
     public function archive(): void
     {
         $this->is_archived = true;
         $this->archived_at = now();
+        $this->status = 'Draft'; // Change status back to Draft when archived
         $this->save();
     }
 
