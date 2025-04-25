@@ -175,6 +175,11 @@ class BookingProcess extends Component
                 'attendees.*.email' => 'required|email|max:255',
             ]);
         } elseif ($this->currentStep === 2) {
+            // Check if user is on waiting list before proceeding to payment step
+            if ($this->isOnWaitingList()) {
+                $this->dispatch('toast', 'Payment cannot be processed for tickets on waiting list.', 'error');
+                return;
+            }
             // Validation for payment information will be done in the completeBooking method
         }
 
@@ -190,10 +195,42 @@ class BookingProcess extends Component
         }
     }
 
+    /**
+     * Check if the current user is on the waiting list for any of the selected tickets
+     */
+    private function isOnWaitingList()
+    {
+        $userId = Auth::id();
+
+        foreach ($this->selectedTickets as $ticketId => $quantity) {
+            if ($quantity > 0) {
+                $ticket = collect($this->tickets)->firstWhere('id', $ticketId);
+
+                // Check if user is on waiting list for this ticket
+                $onWaitingList = $ticket->waitingList()
+                    ->where('user_id', $userId)
+                    ->whereIn('status', ['pending', 'notified'])
+                    ->exists();
+
+                if ($onWaitingList) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public function completeBooking()
     {
         // Validate payment information
         $this->validate();
+
+        // Check if user is on waiting list for any selected tickets
+        if ($this->isOnWaitingList()) {
+            $this->dispatch('toast', 'Payment cannot be processed for tickets on waiting list.', 'error');
+            return;
+        }
 
         try {
             DB::beginTransaction();

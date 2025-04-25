@@ -6,6 +6,7 @@ use App\Models\Event;
 use App\Models\Ticket;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class EventDetail extends Component
 {
@@ -113,10 +114,43 @@ class EventDetail extends Component
         return $total;
     }
 
+    /**
+     * Check if the current user is on the waiting list for any of the selected tickets
+     */
+    private function isOnWaitingList()
+    {
+        $userId = Auth::id();
+        if (!$userId) return false;
+
+        foreach ($this->selectedTickets as $ticketId => $quantity) {
+            if ($quantity > 0) {
+                $ticket = collect($this->tickets)->firstWhere('id', $ticketId);
+
+                // Check if user is on waiting list for this ticket
+                $onWaitingList = $ticket->waitingList()
+                    ->where('user_id', $userId)
+                    ->whereIn('status', ['pending', 'notified'])
+                    ->exists();
+
+                if ($onWaitingList) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public function proceedToBooking()
     {
         if ($this->getTotalSelectedTickets() === 0) {
             $this->dispatch('toast', 'Please select at least one ticket', 'error');
+            return;
+        }
+
+        // Check if user is on waiting list for any selected tickets
+        if ($this->isOnWaitingList()) {
+            $this->dispatch('toast', 'Payment cannot be processed for tickets on waiting list.', 'error');
             return;
         }
 

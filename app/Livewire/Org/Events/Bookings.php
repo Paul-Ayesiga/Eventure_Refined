@@ -102,6 +102,15 @@ class Bookings extends Component
             // Remove excess attendee forms
             $this->attendees = array_slice($this->attendees, 0, $value);
         }
+
+        // If we have a payment intent and the quantity changes, we need to reinitialize the payment form
+        if ($this->useStripePayment && $this->clientSecret) {
+            // We need to dispatch the event again to reinitialize the payment form
+            $this->dispatch('payment-intent-created', clientSecret: $this->clientSecret);
+
+            // Also dispatch a specific event for quantity changes
+            $this->dispatch('ticket-quantity-changed', quantity: $value);
+        }
     }
 
     public function loadCustomers()
@@ -205,6 +214,17 @@ class Bookings extends Component
     }
 
     /**
+     * Check if a user is on the waiting list for a ticket
+     */
+    private function isOnWaitingList($ticket, $customer)
+    {
+        return $ticket->waitingList()
+            ->where('user_id', $customer->id)
+            ->whereIn('status', ['pending', 'notified'])
+            ->exists();
+    }
+
+    /**
      * Initialize the payment process
      */
     public function initializePayment()
@@ -245,7 +265,21 @@ class Bookings extends Component
         // Get customer and ticket
         $customer = \App\Models\User::find($this->selectedCustomerId);
         $ticket = Ticket::find($this->selectedTicketId);
+
+        // Check if the customer is on the waiting list for this ticket
+        if ($this->isOnWaitingList($ticket, $customer)) {
+            $this->dispatch('toast', "Payment cannot be processed for tickets on waiting list.", 'error', 'top-right');
+            return;
+        }
+
         $totalAmount = $ticket->price * $this->ticketQuantity;
+
+        // Make sure we have the right number of attendees if not using customer as attendee
+        if (!$this->useCustomerAsAttendee) {
+            if (count($this->attendees) != $this->ticketQuantity) {
+                $this->updatedTicketQuantity($this->ticketQuantity);
+            }
+        }
 
         // Create a payment intent
         $this->createPaymentIntent($customer, $totalAmount);
@@ -255,6 +289,12 @@ class Bookings extends Component
 
     public function simulatePurchase()
     {
+        // Prevent creating bookings if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot create bookings for archived events.', 'error', 'top-right');
+            return;
+        }
+
         // First validate basic requirements
         $validationRules = [
             'selectedCustomerId' => [
@@ -401,10 +441,14 @@ class Bookings extends Component
         // Calculate total amount
         $totalAmount = $ticket->price * $this->ticketQuantity;
 
+        // Check if the customer is on the waiting list for this ticket
+        if ($this->isOnWaitingList($ticket, $customer)) {
+            $this->dispatch('toast', "Payment cannot be processed for tickets on waiting list.", 'error', 'top-right');
+            return;
+        }
+
         // If using Stripe payment, check payment status
         if ($this->useStripePayment) {
-
-
             // We need a payment intent ID to proceed
             if (!$this->paymentIntentId) {
                 $this->dispatch('toast', "Please initialize payment first.", 'error', 'top-right');
@@ -516,6 +560,12 @@ class Bookings extends Component
 
     public function deleteBooking($bookingId)
     {
+        // Prevent deleting bookings if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot delete bookings for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $booking = Booking::findOrFail($bookingId);
 
         // Check if booking is already cancelled

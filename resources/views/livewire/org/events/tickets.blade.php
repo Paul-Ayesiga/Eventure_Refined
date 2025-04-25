@@ -1,22 +1,62 @@
 <div>
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <!-- Archived Warning Banner -->
+        @if ($event->isArchived())
+            <div
+                class="mb-6 p-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 rounded-md">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 dark:text-amber-400"
+                            viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-amber-700 dark:text-amber-300">This event has been archived and is now
+                            read-only. Tickets cannot be modified.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Event Tickets</h2>
-            <flux:button icon="plus" wire:click="openCreateModal" variant="primary" class="bg-teal-500">
-                Create Ticket
-            </flux:button>
+            <div class="flex items-center gap-2">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Event Tickets</h2>
+                @if ($event->isArchived())
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Archived
+                    </span>
+                @endif
+            </div>
+            @if (!$event->isArchived())
+                <flux:button icon="plus" wire:click="openCreateModal" variant="primary" class="bg-teal-500">
+                    Create Ticket
+                </flux:button>
+            @endif
         </div>
 
         @if ($tickets->isEmpty())
             <div class="text-center py-8">
                 <flux:icon name="ticket" class="mx-auto h-12 w-12 text-gray-400" />
                 <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No tickets</h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new ticket.</p>
-                <div class="mt-6">
-                    <flux:button icon="plus" wire:click="openCreateModal" variant="primary" class="bg-teal-500">
-                        Create Ticket
-                    </flux:button>
-                </div>
+                @if ($event->isArchived())
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">This archived event has no tickets.</p>
+                @else
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by creating a new ticket.</p>
+                    <div class="mt-6">
+                        <flux:button icon="plus" wire:click="openCreateModal" variant="primary" class="bg-teal-500">
+                            Create Ticket
+                        </flux:button>
+                    </div>
+                @endif
             </div>
         @else
             <!-- Desktop Table View -->

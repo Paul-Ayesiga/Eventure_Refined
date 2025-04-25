@@ -170,6 +170,12 @@ class EventDetails extends Component
 
     public function toggleEdit()
     {
+        // Prevent editing if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Archived events cannot be edited. They are read-only for insights.', 'error', 'top-right');
+            return;
+        }
+
         $this->isEditing = !$this->isEditing;
         if ($this->isEditing) {
             $this->fillFormFields();
@@ -181,6 +187,12 @@ class EventDetails extends Component
 
     public function update()
     {
+        // Prevent updating if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Archived events cannot be updated. They are read-only for insights.', 'error', 'top-right');
+            return;
+        }
+
         $this->validate();
 
         $start_datetime = Carbon::parse("{$this->start_date} {$this->start_time}");
@@ -316,6 +328,29 @@ class EventDetails extends Component
         }
 
         $this->tempBanners = []; // Reset temporary uploads
+    }
+
+    /**
+     * Check if the event is archived
+     */
+    public function isArchived()
+    {
+        return $this->event->isArchived();
+    }
+
+    /**
+     * Get the archived status message
+     */
+    public function getArchivedMessage()
+    {
+        if (!$this->event->isArchived()) {
+            return null;
+        }
+
+        $archivedAt = $this->event->archived_at->format('M d, Y');
+        $deletionDate = $this->event->archived_at->addDays(30)->format('M d, Y');
+
+        return "This event was archived on {$archivedAt} and is now read-only. It will be permanently deleted on {$deletionDate}.";
     }
 
     public function render()

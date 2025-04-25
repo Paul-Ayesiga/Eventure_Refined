@@ -18,6 +18,7 @@
                     variant="danger"
                     :disabled="empty($selectedEntries)"
                     icon="trash"
+                    hint="select atleast one"
                 >
                     Remove Selected
                 </flux:button>

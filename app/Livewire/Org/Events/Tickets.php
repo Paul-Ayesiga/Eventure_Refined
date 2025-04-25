@@ -56,6 +56,12 @@ class Tickets extends Component
 
     public function openCreateModal()
     {
+        // Prevent creating tickets if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot create tickets for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $this->resetForm();
         $this->isEditing = false;
         $this->isModalOpen = true;
@@ -63,6 +69,12 @@ class Tickets extends Component
 
     public function openEditModal($ticketId)
     {
+        // Prevent editing tickets if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot edit tickets for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $ticket = Ticket::findOrFail($ticketId);
 
         $this->ticketId = $ticket->id;
@@ -104,6 +116,12 @@ class Tickets extends Component
 
     public function saveTicket()
     {
+        // Prevent saving tickets if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot modify tickets for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $this->validate();
 
         $data = [
@@ -135,6 +153,12 @@ class Tickets extends Component
 
     public function deleteTicket($ticketId)
     {
+        // Prevent deleting tickets if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot delete tickets for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $ticket = Ticket::findOrFail($ticketId);
 
         // Check if ticket has any bookings
@@ -149,6 +173,12 @@ class Tickets extends Component
 
     public function toggleTicketStatus($ticketId)
     {
+        // Prevent toggling ticket status if the event is archived
+        if ($this->event->isArchived()) {
+            $this->dispatch('toast', 'Cannot modify tickets for archived events.', 'error', 'top-right');
+            return;
+        }
+
         $ticket = Ticket::findOrFail($ticketId);
         $ticket->status = $ticket->status === 'active' ? 'inactive' : 'active';
         $ticket->save();

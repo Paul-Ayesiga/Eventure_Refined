@@ -28,7 +28,9 @@ class Event extends Model
         'auto_convert_timezone',
         'description',
         'tags',
-        'banners'
+        'banners',
+        'is_archived',
+        'archived_at'
     ];
 
     protected $casts = [
@@ -39,7 +41,9 @@ class Event extends Model
         'auto_convert_timezone' => 'boolean',
         'repeat_days' => 'integer',
         'tags' => 'array',
-        'banners' => 'array'
+        'banners' => 'array',
+        'is_archived' => 'boolean',
+        'archived_at' => 'datetime'
     ];
 
     public function organisation(): BelongsTo
@@ -86,5 +90,46 @@ class Event extends Model
     public function organiser(): BelongsTo
     {
         return $this->organisation();
+    }
+
+    /**
+     * Check if the event has passed its end date
+     *
+     * @param bool $includeBuffer Whether to include a one-day buffer after the event ends
+     * @return bool
+     */
+    public function isPast(bool $includeBuffer = false): bool
+    {
+        $compareDate = $includeBuffer ? now()->subDay() : now();
+
+        return $this->end_date
+            ? $compareDate->isAfter($this->end_date)
+            : $compareDate->isAfter($this->start_date);
+    }
+
+    /**
+     * Check if the event is archived
+     */
+    public function isArchived(): bool
+    {
+        return $this->is_archived;
+    }
+
+    /**
+     * Archive the event
+     */
+    public function archive(): void
+    {
+        $this->is_archived = true;
+        $this->archived_at = now();
+        $this->save();
+    }
+
+    /**
+     * Check if the event has been archived for more than 30 days
+     */
+    public function isReadyForDeletion(): bool
+    {
+        return $this->is_archived && $this->archived_at && $this->archived_at->addDays(30)->isPast();
     }
 }

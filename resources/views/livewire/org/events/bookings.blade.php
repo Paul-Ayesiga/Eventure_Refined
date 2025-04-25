@@ -1,14 +1,50 @@
 <div>
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Event Bookings</h2>
-            <div class="flex flex-wrap gap-2">
-                <div class="flex space-x-2">
-                    <flux:button icon="plus" wire:click="$set('isSimulating', true)" variant="primary"
-                        class="bg-teal-500">
-                        Simulate Purchase
-                    </flux:button>
+        <!-- Archived Warning Banner -->
+        @if ($event->isArchived())
+            <div
+                class="mb-6 p-4 border-l-4 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 rounded-md">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 dark:text-amber-400"
+                            viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-amber-700 dark:text-amber-300">This event has been archived and is now
+                            read-only. Bookings cannot be modified.</p>
+                    </div>
                 </div>
+            </div>
+        @endif
+
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-2">
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Event Bookings</h2>
+                @if ($event->isArchived())
+                    <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        Archived
+                    </span>
+                @endif
+            </div>
+            <div class="flex flex-wrap gap-2">
+                @if (!$event->isArchived())
+                    <div class="flex space-x-2">
+                        <flux:button icon="plus" wire:click="$set('isSimulating', true)" variant="primary"
+                            class="bg-teal-500">
+                            Simulate Purchase
+                        </flux:button>
+                    </div>
+                @endif
                 <div class="flex space-x-2">
                     <flux:button icon="arrow-down-tray" variant="outline" class="whitespace-nowrap">
                         <span class="hidden sm:inline">Export</span>
@@ -26,12 +62,14 @@
                 <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No bookings yet</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by simulating a purchase or wait
                     for customers to book tickets.</p>
-                <div class="mt-6">
-                    <flux:button icon="plus" wire:click="$set('isSimulating', true)" variant="primary"
-                        class="bg-teal-500">
-                        Simulate Purchase
-                    </flux:button>
-                </div>
+                @if (!$event->isArchived())
+                    <div class="mt-6">
+                        <flux:button icon="plus" wire:click="$set('isSimulating', true)" variant="primary"
+                            class="bg-teal-500">
+                            Simulate Purchase
+                        </flux:button>
+                    </div>
+                @endif
             </div>
         @else
             <!-- Desktop Table View -->
@@ -132,10 +170,12 @@
                                                 wire:click="printBooking({{ $booking->id }})" variant="outline"
                                                 title="Print">
                                             </flux:button>
-                                            <flux:modal.trigger :name="'delete-booking-'.$booking->id">
-                                                <flux:button variant="danger" icon="trash" size="sm"
-                                                    title="Delete"></flux:button>
-                                            </flux:modal.trigger>
+                                            @if (!$event->isArchived())
+                                                <flux:modal.trigger :name="'delete-booking-'.$booking->id">
+                                                    <flux:button variant="danger" icon="trash" size="sm"
+                                                        title="Delete"></flux:button>
+                                                </flux:modal.trigger>
+                                            @endif
                                         </flux:button.group>
                                     </div>
                                 </td>
@@ -176,7 +216,8 @@
                             <div>
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">#{{ $booking->id }}
                                 </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ $booking->booking_reference }}
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $booking->booking_reference }}
                                 </div>
                             </div>
                             <span
@@ -247,10 +288,12 @@
                                 <flux:button size="sm" icon="printer"
                                     wire:click="printBooking({{ $booking->id }})" variant="outline" title="Print">
                                 </flux:button>
-                                <flux:modal.trigger :name="'delete-booking-'.$booking->id">
-                                    <flux:button variant="danger" icon="trash" size="sm" title="Delete">
-                                    </flux:button>
-                                </flux:modal.trigger>
+                                @if (!$event->isArchived())
+                                    <flux:modal.trigger :name="'delete-booking-'.$booking->id">
+                                        <flux:button variant="danger" icon="trash" size="sm" title="Delete">
+                                        </flux:button>
+                                    </flux:modal.trigger>
+                                @endif
                             </flux:button.group>
                         </div>
                     </div>
@@ -464,34 +507,53 @@
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Secure payment via Stripe</p>
                             </div>
 
-                            @if ($clientSecret)
-                                <div id="payment-element" class="mb-4"></div>
+                            <!-- Payment will be processed for the selected customer -->
+                            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    <span class="font-medium">Payment will be processed for:</span>
+                                    @if ($selectedCustomerId)
+                                        {{ collect($customers)->firstWhere('id', $selectedCustomerId)['name'] }}
+                                    @else
+                                        Selected customer
+                                    @endif
+                                </p>
+                            </div>
 
-                                <div id="payment-message" class="text-sm text-red-500 mb-4 hidden"></div>
-
-                                <div class="flex justify-between">
-                                    <flux:button variant="ghost" wire:click="cancelPayment">Cancel Payment
-                                    </flux:button>
-                                    <flux:button id="submit-payment" variant="primary">
-                                        <span id="button-text">Pay Now</span>
-                                        <span id="spinner" class="hidden">Processing...</span>
-                                    </flux:button>
-                                </div>
-                            @else
-                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                                    <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                                        <span class="font-medium">Preparing payment form...</span>
-                                    </p>
-                                    <div class="flex justify-center">
-                                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500">
-                                        </div>
+                            <!-- Payment form container with fixed structure -->
+                            <div id="stripe-payment-container" class="relative">
+                                @if ($clientSecret)
+                                    <!-- Fixed payment element container -->
+                                    <div id="payment-element-container">
+                                        <div id="payment-element" class="mb-4"></div>
                                     </div>
-                                    <p class="text-xs text-blue-600 dark:text-blue-300 mt-2">
-                                        Click "Initialize Payment" to start the payment process.
-                                    </p>
 
-                                </div>
-                            @endif
+                                    <!-- Fixed message container -->
+                                    <div id="payment-message" class="text-sm text-red-500 mb-4 hidden"></div>
+
+                                    <!-- Fixed button container -->
+                                    <div class="flex justify-between">
+                                        <flux:button variant="ghost" wire:click="cancelPayment">Cancel Payment
+                                        </flux:button>
+                                        <flux:button id="submit-payment" variant="primary">
+                                            <span id="button-text">Pay Now</span>
+                                            <span id="spinner" class="hidden">Processing...</span>
+                                        </flux:button>
+                                    </div>
+                                @else
+                                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                                        <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                                            <span class="font-medium">Preparing payment form...</span>
+                                        </p>
+                                        <div class="flex justify-center">
+                                            <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500">
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-blue-600 dark:text-blue-300 mt-2">
+                                            Click "Initialize Payment" to start the payment process.
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     @endif
 
@@ -702,9 +764,25 @@
                     console.error('Error initializing Stripe:', error);
                 }
 
+                // Initialize variables
+                let lastClientSecret = null;
+                let lastTicketQuantity = @this.get('ticketQuantity');
+
                 // Listen for payment intent created event
                 @this.on('payment-intent-created', (data) => {
+                    console.log('Payment intent created/updated event received');
                     const clientSecret = data.clientSecret;
+                    lastClientSecret = clientSecret;
+
+                    // Clear any existing elements first
+                    if (paymentElement) {
+                        try {
+                            paymentElement.unmount();
+                        } catch (e) {
+                            console.log('Error unmounting payment element:', e);
+                        }
+                        paymentElement = null;
+                    }
 
                     // Wait a moment for the DOM to update before setting up elements
                     setTimeout(() => {
@@ -712,38 +790,69 @@
                     }, 500);
                 });
 
-                // Also listen for Livewire updates that might affect the payment form
-                let lastClientSecret = null;
-                document.addEventListener('livewire:update', () => {
-                    const paymentContainer = document.getElementById('payment-element');
-                    if (paymentContainer && lastClientSecret && !paymentElement) {
-                        setupStripeElements(lastClientSecret);
+                // Listen for ticket quantity changes
+                @this.on('ticket-quantity-changed', (quantity) => {
+                    console.log('Ticket quantity changed to:', quantity);
+                    if (lastClientSecret) {
+                        setTimeout(() => {
+                            setupStripeElements(lastClientSecret);
+                        }, 500);
                     }
                 });
 
-                // Store the client secret when it's created
-                @this.on('payment-intent-created', (data) => {
-                    lastClientSecret = data.clientSecret;
+                // Listen for Livewire updates that might affect the payment form
+                document.addEventListener('livewire:update', () => {
+                    // Check if ticket quantity has changed
+                    const currentQuantity = @this.get('ticketQuantity');
+
+                    // Check if we need to reinitialize the payment form
+                    if (lastClientSecret && currentQuantity !== lastTicketQuantity) {
+                        console.log('Ticket quantity changed from', lastTicketQuantity, 'to', currentQuantity);
+                        setTimeout(() => {
+                            setupStripeElements(lastClientSecret);
+                        }, 500);
+                    }
+
+                    // Update the last ticket quantity
+                    lastTicketQuantity = currentQuantity;
                 });
             });
 
             function setupStripeElements(clientSecret) {
                 try {
+                    console.log('Setting up Stripe Elements with ticket quantity:', @this.get('ticketQuantity'));
+
                     // Validate client secret
                     if (!clientSecret || typeof clientSecret !== 'string' || !clientSecret.startsWith('pi_')) {
                         console.error('Invalid client secret format');
                         return;
                     }
 
-                    // Clear any existing elements
-                    const paymentContainer = document.getElementById('payment-element');
-                    if (paymentContainer) {
-                        paymentContainer.innerHTML = '';
-                    } else {
-                        console.error('Payment container not found!');
+                    // First, clean up any existing elements
+                    if (paymentElement) {
+                        try {
+                            paymentElement.unmount();
+                        } catch (e) {
+                            console.log('Error unmounting payment element:', e);
+                        }
+                        paymentElement = null;
+                    }
+
+                    if (elements) {
+                        elements = null;
+                    }
+
+                    // Get the container
+                    const container = document.getElementById('payment-element-container');
+                    if (!container) {
+                        console.error('Payment element container not found');
                         return;
                     }
-                    // Create elements instance
+
+                    // Create a fresh payment element div
+                    container.innerHTML = '<div id="payment-element" class="mb-4"></div>';
+
+                    // Create elements instance with the client secret
                     elements = stripe.elements({
                         clientSecret: clientSecret,
                         appearance: {
@@ -754,14 +863,40 @@
                         }
                     });
 
-                    // Create and mount the Payment Element
+                    // Create the payment element
                     paymentElement = elements.create('payment');
-                    paymentElement.mount('#payment-element');
 
-                    // Handle form submission
+                    // Add event listeners
+                    paymentElement.on('ready', function() {
+                        console.log('Payment element is ready');
+                    });
+
+                    paymentElement.on('loaderror', function(event) {
+                        console.error('Payment element load error:', event);
+                    });
+
+                    // Mount the element
+                    setTimeout(() => {
+                        try {
+                            const mountElement = document.getElementById('payment-element');
+                            if (mountElement) {
+                                paymentElement.mount('#payment-element');
+                                console.log('Payment element mounted successfully');
+                            } else {
+                                console.error('Payment element mount target not found');
+                            }
+                        } catch (e) {
+                            console.error('Error mounting payment element:', e);
+                        }
+                    }, 100);
+
+                    // Set up the submit button
                     const submitButton = document.getElementById('submit-payment');
                     if (submitButton) {
-                        submitButton.addEventListener('click', handleSubmit);
+                        // Remove any existing event listeners
+                        const newSubmitButton = submitButton.cloneNode(true);
+                        submitButton.parentNode.replaceChild(newSubmitButton, submitButton);
+                        newSubmitButton.addEventListener('click', handleSubmit);
                     } else {
                         console.error('Submit button not found!');
                     }
@@ -773,18 +908,36 @@
             async function handleSubmit(e) {
                 e.preventDefault();
 
+                // Check if elements is initialized
+                if (!elements) {
+                    console.error('Stripe Elements not initialized');
+                    alert('Payment form not ready. Please try again.');
+                    return;
+                }
+
                 setLoading(true);
 
-                const messageContainer = document.getElementById('payment-message');
+                // Find or create message container
+                let messageContainer = document.getElementById('payment-message');
+                if (!messageContainer) {
+                    // If container doesn't exist, try to find the payment element parent and add it
+                    const paymentElement = document.getElementById('payment-element');
+                    if (paymentElement && paymentElement.parentNode) {
+                        messageContainer = document.createElement('div');
+                        messageContainer.id = 'payment-message';
+                        messageContainer.className = 'text-sm text-red-500 mb-4 hidden';
+                        paymentElement.parentNode.insertBefore(messageContainer, paymentElement.nextSibling);
+                    } else {
+                        console.error('Cannot create message container - payment element not found');
+                    }
+                }
+
                 if (messageContainer) {
                     messageContainer.classList.add('hidden');
                     messageContainer.textContent = '';
-                } else {
-                    console.error('Message container not found!');
                 }
 
                 try {
-
                     const {
                         error
                     } = await stripe.confirmPayment({
@@ -801,10 +954,11 @@
                         if (messageContainer) {
                             messageContainer.textContent = error.message;
                             messageContainer.classList.remove('hidden');
+                        } else {
+                            alert('Payment error: ' + error.message);
                         }
                         setLoading(false);
                     } else {
-
                         // Payment succeeded
                         setLoading(false);
                         @this.call('handlePaymentSuccess');
@@ -814,6 +968,8 @@
                     if (messageContainer) {
                         messageContainer.textContent = 'An unexpected error occurred. Please try again.';
                         messageContainer.classList.remove('hidden');
+                    } else {
+                        alert('An unexpected error occurred. Please try again.');
                     }
                     setLoading(false);
                 }
@@ -821,8 +977,32 @@
 
             function setLoading(isLoading) {
                 const submitButton = document.getElementById('submit-payment');
-                const spinner = document.getElementById('spinner');
-                const buttonText = document.getElementById('button-text');
+                if (!submitButton) {
+                    console.error('Submit button not found in setLoading');
+                    return;
+                }
+
+                // Find or create spinner and button text elements
+                let spinner = document.getElementById('spinner');
+                let buttonText = document.getElementById('button-text');
+
+                if (!spinner || !buttonText) {
+                    // If elements don't exist, create them
+                    if (!spinner) {
+                        spinner = document.createElement('span');
+                        spinner.id = 'spinner';
+                        spinner.className = 'hidden';
+                        spinner.textContent = 'Processing...';
+                        submitButton.appendChild(spinner);
+                    }
+
+                    if (!buttonText) {
+                        buttonText = document.createElement('span');
+                        buttonText.id = 'button-text';
+                        buttonText.textContent = 'Pay Now';
+                        submitButton.appendChild(buttonText);
+                    }
+                }
 
                 if (isLoading) {
                     submitButton.disabled = true;
