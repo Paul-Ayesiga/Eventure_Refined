@@ -7,7 +7,7 @@
         <flux:header sticky container class="top-0 bg-white/50 backdrop-blur-xl dark:bg-blue-950/50 shadow-lg">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
-                <flux:brand href="{{ route('user-dashboard') }}" name="Eventure" wire:navigate>
+                <flux:brand href="{{ route('home') }}" name="Eventure" wire:navigate>
                     <x-slot name="logo" class="size-6 rounded-full bg-cyan-500 text-white text-xs font-bold">
                         <flux:icon name="rocket-launch" variant="micro" />
                     </x-slot>

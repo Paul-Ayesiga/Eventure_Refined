@@ -135,4 +135,27 @@ class Event extends Model
     {
         return $this->is_archived && $this->archived_at && $this->archived_at->addDays(30)->isPast();
     }
+
+    /**
+     * Get the first banner image URL
+     */
+    public function getBannerAttribute()
+    {
+        if (!empty($this->banners)) {
+            // If banners is already an array, use it directly
+            if (is_array($this->banners) && count($this->banners) > 0) {
+                return $this->banners[0];
+            }
+
+            // If banners is a JSON string, decode it first
+            if (is_string($this->banners)) {
+                $decoded = json_decode($this->banners, true);
+                if (is_array($decoded) && count($decoded) > 0) {
+                    return $decoded[0];
+                }
+            }
+        }
+
+        return null;
+    }
 }

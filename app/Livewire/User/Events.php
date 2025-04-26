@@ -111,10 +111,31 @@ class Events extends Component
         }
     }
 
+    public function mount()
+    {
+        // Check if we have query parameters and set them
+        if (request()->has('searchQuery')) {
+            $this->searchQuery = request()->searchQuery;
+        }
+
+        if (request()->has('selectedCategory')) {
+            $this->selectedCategory = request()->selectedCategory;
+        }
+
+        if (request()->has('selectedDate')) {
+            $this->selectedDate = request()->selectedDate;
+        }
+
+        if (request()->has('selectedLocation')) {
+            $this->selectedLocation = request()->selectedLocation;
+        }
+    }
+
     public function render()
     {
         $query = Event::with(['location', 'organisation'])
-            ->where('status', 'Published');
+            ->where('status', 'Published')
+            ->where('is_archived', false);
 
         // Apply search filter
         if (!empty($this->searchQuery)) {
@@ -158,8 +179,22 @@ class Events extends Component
 
         $events = $query->orderBy('start_date', 'asc')->paginate(12);
 
+        // Get all unique categories for the filter
+        $allCategories = Event::where('status', 'Published')
+            ->where('is_archived', false)
+            ->whereNotNull('category')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->toArray();
+
+        $categoryOptions = array_merge(['All' => 'All'], array_combine($allCategories, $allCategories));
+
         return view('livewire.user.events', [
-            'events' => $events
-        ]);
+            'events' => $events,
+            'categoryOptions' => $categoryOptions
+        ])->layout('components.layouts.public');
     }
+
+
 }

@@ -11,7 +11,11 @@ use App\Models\BookingDate;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
+use Stripe\Exception\ApiErrorException;
 
 class BookingProcess extends Component
 {
@@ -32,6 +36,9 @@ class BookingProcess extends Component
     public $billingName;
     public $billingEmail;
     public $billingPhone;
+
+    // For Stripe payment
+    public $clientSecret;
 
     // Steps
     public $currentStep = 1;
@@ -197,6 +204,167 @@ class BookingProcess extends Component
 
         if ($this->currentStep < $this->totalSteps) {
             $this->currentStep++;
+
+            // Notify the frontend that the step has changed
+            $this->dispatch('stepChanged', $this->currentStep);
+
+            // If moving to payment step and credit card is selected, create payment intent
+            if ($this->currentStep === 3 && $this->paymentMethod === 'credit_card') {
+                $this->createPaymentIntent();
+            }
+        }
+    }
+
+    /**
+     * Create a Stripe payment intent and emit the client secret
+     */
+    public function createPaymentIntent()
+    {
+        try {
+            // Check if Stripe is configured
+            $stripeKey = config('cashier.key');
+            $stripeSecret = config('cashier.secret');
+
+            if (!$stripeKey || !$stripeSecret) {
+                Log::warning('Stripe keys not configured. STRIPE_KEY and STRIPE_SECRET must be set in .env');
+                $this->dispatch('toast', 'Payment processing is not configured. Please contact support.', 'error');
+
+                // Dispatch an event to notify the frontend that Stripe is not configured
+                $this->dispatch('stripe-configuration-error', [
+                    'message' => 'Stripe API keys are missing. Please check your configuration.'
+                ]);
+                return;
+            }
+
+            // Set up Stripe API key
+            Stripe::setApiKey($stripeSecret);
+
+            // Calculate amount in cents/smallest currency unit
+            $amount = (int)($this->getTotalPrice() * 100);
+
+            // Make sure we have a valid amount
+            if ($amount <= 0) {
+                $this->dispatch('toast', 'Invalid payment amount.', 'error');
+                return;
+            }
+
+            // Get currency from event or use default
+            $currency = $this->event->currency ? strtolower($this->event->currency) : 'usd';
+
+            // Create a payment intent
+            $paymentIntent = PaymentIntent::create([
+                'amount' => $amount,
+                'currency' => $currency,
+                'metadata' => [
+                    'event_id' => $this->eventId,
+                    'user_id' => Auth::id(),
+                ],
+                'description' => 'Booking for ' . $this->event->name,
+            ]);
+
+            Log::info('Payment intent created successfully', [
+                'payment_intent_id' => $paymentIntent->id,
+                'amount' => $amount,
+                'currency' => $currency
+            ]);
+
+            // Store the client secret for debugging
+            $clientSecret = $paymentIntent->client_secret;
+
+            // Log the client secret type and format for debugging
+            Log::info('Client secret type and format', [
+                'type' => gettype($clientSecret),
+                'starts_with_pi' => str_starts_with($clientSecret, 'pi_'),
+                'length' => strlen($clientSecret)
+            ]);
+
+            // Store the client secret in a public property
+            $this->clientSecret = $clientSecret;
+
+            // Emit an event to notify the frontend that the payment intent is ready
+            $this->dispatch('payment-intent-ready');
+
+        } catch (ApiErrorException $e) {
+            // Handle specific Stripe API errors
+            Log::error('Stripe API error: ' . $e->getMessage(), [
+                'error_type' => $e->getStripeCode(),
+                'error_code' => $e->getHttpStatus(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $errorMessage = 'Stripe payment error: ' . $e->getMessage();
+            $this->dispatch('toast', $errorMessage, 'error');
+
+            // Dispatch an event to notify the frontend of the error
+            $this->dispatch('stripe-configuration-error', [
+                'message' => $errorMessage
+            ]);
+        } catch (\Exception $e) {
+            // Handle general errors
+            Log::error('Stripe payment intent creation error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $errorMessage = 'Error creating payment: ' . $e->getMessage();
+            $this->dispatch('toast', $errorMessage, 'error');
+
+            // Dispatch an event to notify the frontend of the error
+            $this->dispatch('stripe-configuration-error', [
+                'message' => $errorMessage
+            ]);
+        }
+    }
+
+    /**
+     * Handle successful payment
+     */
+    public function handlePaymentSuccess()
+    {
+        try {
+            // Process the booking after successful payment
+            $booking = $this->completeBooking();
+
+            if ($booking) {
+                // Store the booking ID in the session for redirect
+                session()->put('completed_booking_id', $booking->id);
+
+                // Use JavaScript to redirect to the tickets page
+                $this->dispatch('redirect-to', ['url' => route('tickets.view', ['bookingId' => $booking->id])]);
+
+                // Return the booking ID for the JavaScript callback
+                return ['bookingId' => $booking->id, 'redirect' => route('tickets.view', ['bookingId' => $booking->id])];
+            }
+        } catch (\Exception $e) {
+            Log::error('Error handling payment success: ' . $e->getMessage());
+            $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
+        }
+    }
+
+    /**
+     * Check if there's a completed booking to redirect to
+     */
+    public function checkCompletedBooking()
+    {
+        if (session()->has('completed_booking_id')) {
+            $bookingId = session()->get('completed_booking_id');
+            session()->forget('completed_booking_id');
+
+            // Return the redirect URL
+            return ['redirect' => route('tickets.view', ['bookingId' => $bookingId])];
+        }
+
+        return null;
+    }
+
+    /**
+     * Handle payment method changes
+     */
+    public function updatedPaymentMethod($value)
+    {
+        if ($value === 'credit_card' && $this->currentStep === 3) {
+            // Initialize Stripe payment when switching to credit card
+            $this->createPaymentIntent();
         }
     }
 
@@ -307,11 +475,15 @@ class BookingProcess extends Component
             // Clear booking session data
             session()->forget('booking');
 
-            // Redirect to booking confirmation page
-            return redirect()->route('tickets.view', ['bookingId' => $booking->id])->with('success', 'Booking completed successfully!');
+            // Set success message in session
+            session()->flash('success', 'Booking completed successfully!');
+
+            // Return the booking object for further processing
+            return $booking;
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Booking error: ' . $e->getMessage());
             $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
         }
     }
@@ -321,6 +493,8 @@ class BookingProcess extends Component
         return view('livewire.user.booking-process', [
             'totalPrice' => $this->getTotalPrice(),
             'totalTickets' => $this->getTotalTickets(),
-        ]);
+        ])->layout('components.layouts.public');
     }
+
+
 }

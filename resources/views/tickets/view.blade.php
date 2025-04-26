@@ -1,44 +1,23 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>{{ config('app.name', 'Laravel') }} - Event Ticket</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
-    <div class="min-h-screen">
-        <header class="bg-white dark:bg-gray-800 shadow">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Event Ticket
-                </h2>
+<x-layouts.public>
+    @if (isset($bookingId))
+        @livewire('user.ticket-view', ['bookingId' => $bookingId])
+    @elseif(isset($attendeeId))
+        @livewire('user.ticket-view', ['attendeeId' => $attendeeId])
+    @else
+        <div class="container mx-auto px-4 py-8">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 dark:text-gray-500 mb-4"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">No Ticket Information</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">We couldn't find the ticket you're looking for.</p>
+                <a href="{{ route('user.events') }}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Browse Events
+                </a>
             </div>
-        </header>
-
-        <main class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900 dark:text-gray-100">
-                        @if(isset($bookingId))
-                            <livewire:org.events.generate-ticket :bookingId="$bookingId" />
-                        @elseif(isset($attendeeId))
-                            <livewire:org.events.generate-ticket :attendeeId="$attendeeId" />
-                        @else
-                            <p>No ticket information provided.</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-</body>
-</html>
+        </div>
+    @endif
+</x-layouts.public>

@@ -1,7 +1,8 @@
 <div class="bg-gray-100 dark:bg-gray-900 min-h-screen pb-12">
     <!-- Event Header -->
     <div class="relative bg-cover bg-center h-64 md:h-96"
-        style="background-image: url('{{ !empty($event->banners) && is_array($event->banners) && count($event->banners) > 0 ? $event->banners[0] : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' }}');">
+        style="background-image: url('{{ $event->banner ? $event->banner : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' }}');"
+        onerror="this.style.backgroundImage='url(https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80)';">
         <div class="absolute inset-0 bg-black bg-opacity-50"></div>
         <div class="relative container mx-auto px-4 h-full flex flex-col justify-end pb-8">
             <!-- Back Button -->
@@ -123,11 +124,22 @@
                             </div>
                         </div>
 
-                        <!-- Map Placeholder -->
-                        <div class="mt-4 h-64 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
-                            <!-- Map will be loaded here -->
-                            <div class="w-full h-full flex items-center justify-center">
-                                <span class="text-gray-500 dark:text-gray-400">Map loading...</span>
+                        <!-- Map -->
+                        <div class="mt-4">
+                            <div wire:ignore id="map" class="h-64 w-full rounded-lg relative">
+                                <!-- Map Placeholder -->
+                                <div id="map-placeholder"
+                                    class="absolute inset-0 bg-gray-100 dark:bg-gray-700 rounded-lg flex flex-col items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="h-12 w-12 text-gray-400 dark:text-gray-500 mb-2" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <p class="text-gray-500 dark:text-gray-400 text-sm">Loading map...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -321,3 +333,155 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <!-- LocationIQ Map Scripts -->
+    <link href="https://tiles.locationiq.com/v3/libs/maplibre-gl/1.15.2/maplibre-gl.css" rel="stylesheet" />
+    <link href="https://tiles.locationiq.com/v3/libs/gl-geocoder/4.5.1/locationiq-gl-geocoder.css" rel="stylesheet" />
+    <script src="https://tiles.locationiq.com/v3/libs/maplibre-gl/1.15.2/maplibre-gl.js"></script>
+    <script src="https://tiles.locationiq.com/v3/js/liq-styles-ctrl-libre-gl.js?v=0.1.8"></script>
+    <script src="https://tiles.locationiq.com/v3/libs/gl-geocoder/4.5.1/locationiq-gl-geocoder.min.js?v=0.2.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+
+    <script>
+        (function() {
+            let map = null;
+            let marker = null;
+            let initializationAttempts = 0;
+            const MAX_ATTEMPTS = 5;
+
+            function initLocationIQ() {
+                if (!window.locationiq) {
+                    window.locationiq = {};
+                }
+            }
+
+            function initializeMap() {
+                // Check if map container exists
+                const mapContainer = document.getElementById('map');
+                const mapPlaceholder = document.getElementById('map-placeholder');
+
+                // If map container doesn't exist, exit early
+                if (!mapContainer) return;
+
+                console.log('Initializing map in public event view');
+
+                @if ($event->location)
+                    // Clear existing map instance if it exists
+                    if (map) {
+                        map.remove();
+                        map = null;
+                    }
+
+                    // Make sure LocationIQ and maplibregl are defined
+                    if (!window.locationiq || !window.maplibregl) {
+                        console.log('LocationIQ or maplibregl not loaded yet, initializing LocationIQ...');
+                        initLocationIQ();
+
+                        // Retry initialization if libraries aren't loaded yet
+                        if (initializationAttempts < MAX_ATTEMPTS) {
+                            initializationAttempts++;
+                            console.log(
+                                `Retrying map initialization (attempt ${initializationAttempts}/${MAX_ATTEMPTS})...`
+                            );
+                            setTimeout(initializeMap, 500);
+                            return;
+                        } else {
+                            console.error('Failed to initialize map after multiple attempts');
+                            if (mapPlaceholder) {
+                                mapPlaceholder.style.display = 'flex';
+                                const errorText = mapPlaceholder.querySelector('p');
+                                if (errorText) {
+                                    errorText.textContent = 'Unable to load map libraries';
+                                }
+                            }
+                            return;
+                        }
+                    }
+
+                    // Reset attempt counter on successful library load
+                    initializationAttempts = 0;
+
+                    try {
+                        // Set LocationIQ key
+                        locationiq.key = 'pk.8da423155473007977a90bb555d54b41';
+
+                        map = new maplibregl.Map({
+                            container: 'map',
+                            style: locationiq.getLayer("Streets"),
+                            zoom: 15,
+                            center: [{{ $event->location->longitude }}, {{ $event->location->latitude }}]
+                        });
+
+                        // Add marker
+                        marker = new maplibregl.Marker({
+                                color: '#FF0000'
+                            })
+                            .setLngLat([{{ $event->location->longitude }}, {{ $event->location->latitude }}])
+                            .addTo(map);
+
+                        // Add popup
+                        const popup = new maplibregl.Popup({
+                                offset: 25
+                            })
+                            .setHTML('<strong>{{ $event->venue }}</strong>');
+
+                        marker.setPopup(popup);
+
+                        // Add navigation controls
+                        map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+                        // Hide placeholder when map is loaded
+                        map.on('load', function() {
+                            if (mapPlaceholder) {
+                                mapPlaceholder.style.display = 'none';
+                            }
+                        });
+
+                        // Show placeholder if map errors
+                        map.on('error', function() {
+                            if (mapPlaceholder) {
+                                mapPlaceholder.style.display = 'flex';
+                                const errorText = mapPlaceholder.querySelector('p');
+                                if (errorText) {
+                                    errorText.textContent = 'Unable to load map';
+                                }
+                            }
+                        });
+
+                    } catch (error) {
+                        console.error('Error initializing map:', error);
+                        if (mapPlaceholder) {
+                            mapPlaceholder.style.display = 'flex';
+                            const errorText = mapPlaceholder.querySelector('p');
+                            if (errorText) {
+                                errorText.textContent = 'Unable to load map';
+                            }
+                        }
+                    }
+                @endif
+            }
+
+            // Initialize on first load
+            document.addEventListener('DOMContentLoaded', initializeMap);
+
+            // Handle Livewire navigation events
+            document.addEventListener('livewire:navigated', initializeMap);
+
+            // Also listen for Alpine.js initialization events
+            document.addEventListener('alpine:initialized', initializeMap);
+
+            // We're not listening for Livewire updates to avoid unnecessary map reloads
+            // The map should only be initialized once and when navigating to the page
+
+            // Clean up map when navigating away
+            document.addEventListener('livewire:navigating', () => {
+                if (map) {
+                    map.remove();
+                    map = null;
+                }
+            });
+        })();
+    </script>
+@endpush

@@ -3,9 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// Public homepage
+Route::get('/', App\Livewire\Public\Homepage::class)->name('home');
 
 
 
@@ -111,32 +110,7 @@ Route::prefix('user')->group(function () {
 
 
 // Public ticket routes
-Route::get('/tickets/view', function() {
-    $bookingId = request('bookingId');
-    $attendeeId = request('attendeeId');
-
-    if (!$bookingId && !$attendeeId) {
-        abort(404, 'Ticket not found');
-    }
-
-    // Load the ticket data to ensure it exists
-    if ($bookingId) {
-        $booking = \App\Models\Booking::with(['attendees.ticket', 'event.organisation'])->find($bookingId);
-        if (!$booking) {
-            abort(404, 'Booking not found');
-        }
-    } elseif ($attendeeId) {
-        $attendee = \App\Models\Attendee::with(['booking.event.organisation', 'ticket'])->find($attendeeId);
-        if (!$attendee) {
-            abort(404, 'Attendee not found');
-        }
-    }
-
-    return view('tickets.view', [
-        'bookingId' => $bookingId,
-        'attendeeId' => $attendeeId
-    ]);
-})->name('tickets.view');
+Route::get('/tickets/view', App\Livewire\User\TicketView::class)->name('tickets.view');
 
 
 require __DIR__ . '/auth.php';

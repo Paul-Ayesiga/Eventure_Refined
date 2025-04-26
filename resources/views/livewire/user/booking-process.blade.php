@@ -116,54 +116,44 @@
 
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label for="attendee-{{ $index }}-first-name"
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First
-                                                Name</label>
-                                            <input type="text" id="attendee-{{ $index }}-first-name"
-                                                wire:model="attendees.{{ $index }}.first_name"
-                                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                            <flux:label for="attendee-{{ $index }}-first-name" required>First
+                                                Name <span class="text-red-500">*</span></flux:label>
+                                            <flux:input id="attendee-{{ $index }}-first-name"
+                                                wire:model="attendees.{{ $index }}.first_name" />
                                             @error("attendees.{$index}.first_name")
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}
-                                                </p>
+                                                <flux:error>{{ $message }}</flux:error>
                                             @enderror
                                         </div>
 
                                         <div>
-                                            <label for="attendee-{{ $index }}-last-name"
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last
-                                                Name</label>
-                                            <input type="text" id="attendee-{{ $index }}-last-name"
-                                                wire:model="attendees.{{ $index }}.last_name"
-                                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                            <flux:label for="attendee-{{ $index }}-last-name" required>Last Name
+                                                <span class="text-red-500">*</span>
+                                            </flux:label>
+                                            <flux:input id="attendee-{{ $index }}-last-name"
+                                                wire:model="attendees.{{ $index }}.last_name" />
                                             @error("attendees.{$index}.last_name")
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}
-                                                </p>
+                                                <flux:error>{{ $message }}</flux:error>
                                             @enderror
                                         </div>
 
                                         <div>
-                                            <label for="attendee-{{ $index }}-email"
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                                            <input type="email" id="attendee-{{ $index }}-email"
-                                                wire:model="attendees.{{ $index }}.email"
-                                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                            <flux:label for="attendee-{{ $index }}-email" required>Email
+                                                <span class="text-red-500">*</span>
+                                            </flux:label>
+                                            <flux:input type="email" id="attendee-{{ $index }}-email"
+                                                wire:model="attendees.{{ $index }}.email" />
                                             @error("attendees.{$index}.email")
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}
-                                                </p>
+                                                <flux:error>{{ $message }}</flux:error>
                                             @enderror
                                         </div>
 
                                         <div>
-                                            <label for="attendee-{{ $index }}-phone"
-                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone
-                                                (Optional)
-                                            </label>
-                                            <input type="tel" id="attendee-{{ $index }}-phone"
-                                                wire:model="attendees.{{ $index }}.phone"
-                                                class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                            <flux:label for="attendee-{{ $index }}-phone">Phone (Optional)
+                                            </flux:label>
+                                            <flux:input type="tel" id="attendee-{{ $index }}-phone"
+                                                wire:model="attendees.{{ $index }}.phone" />
                                             @error("attendees.{$index}.phone")
-                                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}
-                                                </p>
+                                                <flux:error>{{ $message }}</flux:error>
                                             @enderror
                                         </div>
                                     </div>
@@ -242,64 +232,116 @@
                         <!-- Payment Method Selection -->
                         <div class="mb-6">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Payment Method</h3>
-                            <div class="flex space-x-4">
+                            <div class="space-y-4">
+                                <!-- Credit Card Option -->
                                 <label
-                                    class="flex items-center p-4 border rounded-lg cursor-pointer {{ $paymentMethod === 'credit_card' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700' }}">
-                                    <input type="radio" wire:model.live="paymentMethod" value="credit_card"
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-                                    <span class="ml-2 text-gray-800 dark:text-white">Credit Card</span>
+                                    class="flex items-start p-4 border rounded-lg cursor-pointer {{ $paymentMethod === 'credit_card' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700' }}">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" wire:model.live="paymentMethod" value="credit_card"
+                                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <span class="font-medium text-gray-800 dark:text-white">Credit Card</span>
+                                        <p class="text-gray-500 dark:text-gray-400">Pay securely with your credit or
+                                            debit card</p>
+                                    </div>
                                 </label>
 
+                                <!-- PayPal Option -->
                                 <label
-                                    class="flex items-center p-4 border rounded-lg cursor-pointer {{ $paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700' }}">
-                                    <input type="radio" wire:model.live="paymentMethod" value="paypal"
-                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
-                                    <span class="ml-2 text-gray-800 dark:text-white">PayPal</span>
+                                    class="flex items-start p-4 border rounded-lg cursor-pointer {{ $paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700' }}">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" wire:model.live="paymentMethod" value="paypal"
+                                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <span class="font-medium text-gray-800 dark:text-white">PayPal</span>
+                                        <p class="text-gray-500 dark:text-gray-400">Pay using your PayPal account</p>
+                                    </div>
                                 </label>
+
+                                <script>
+                                    // Initialize Stripe immediately when this section loads
+                                    (function() {
+                                        if (@json($currentStep) === 3 && @json($paymentMethod) === 'credit_card') {
+                                            console.log('Payment step loaded with credit card selected, initializing payment');
+                                            // Execute immediately and also after a short delay to ensure DOM is ready
+                                            try {
+                                                @this.call('createPaymentIntent');
+                                            } catch (e) {
+                                                console.error('Error calling createPaymentIntent:', e);
+                                            }
+
+                                            window.setTimeout(function() {
+                                                try {
+                                                    @this.call('createPaymentIntent');
+                                                } catch (e) {
+                                                    console.error('Error calling createPaymentIntent (delayed):', e);
+                                                }
+                                            }, 500);
+                                        }
+                                    })();
+                                </script>
                             </div>
                             @error('paymentMethod')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                <div class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Credit Card Information (shown only if credit card is selected) -->
+                        <!-- Stripe Payment Element -->
                         @if ($paymentMethod === 'credit_card')
                             <div class="mb-6">
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Card Details</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="md:col-span-2">
-                                        <label for="card-number"
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Card
-                                            Number</label>
-                                        <input type="text" id="card-number" wire:model="cardNumber"
-                                            placeholder="1234 5678 9012 3456"
-                                            class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                        @error('cardNumber')
-                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                        @enderror
+
+                                <!-- Stripe Payment Container with fixed structure -->
+                                <div id="stripe-payment-container" class="relative">
+                                    <!-- Fixed payment element container -->
+                                    <div id="payment-element-container" class="mb-4">
+                                        <div id="payment-element" class="mb-4"></div>
                                     </div>
 
-                                    <div>
-                                        <label for="card-expiry"
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expiry
-                                            Date</label>
-                                        <input type="text" id="card-expiry" wire:model="cardExpiry"
-                                            placeholder="MM/YY"
-                                            class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                        @error('cardExpiry')
-                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                        @enderror
+                                    <!-- Fixed message container -->
+                                    <div id="payment-message" class="text-sm text-red-500 mb-4 hidden"></div>
+
+                                    <!-- Payment button -->
+                                    <div class="mt-4">
+                                        <button type="button" id="submit-payment"
+                                            class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                            Complete Purchase
+                                        </button>
+
+                                        <!-- Fallback option if Stripe is having issues -->
+                                        <div class="mt-4 text-center">
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Having trouble
+                                                with the payment form?</p>
+                                            <button type="button" wire:click="completeBooking"
+                                                class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
+                                                Try alternative payment method
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <div>
-                                        <label for="card-cvc"
-                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CVC</label>
-                                        <input type="text" id="card-cvc" wire:model="cardCvc" placeholder="123"
-                                            class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                                        @error('cardCvc')
-                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                        @enderror
-                                    </div>
+                                    <!-- Debug message for development -->
+                                    @if (config('app.debug'))
+                                        <div id="stripe-loading-message"
+                                            class="mt-2 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                                            <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                                                <span class="font-medium">Preparing payment form...</span>
+                                            </p>
+                                            <div class="flex justify-center">
+                                                <div
+                                                    class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500">
+                                                </div>
+                                            </div>
+                                            <p class="text-xs text-blue-600 dark:text-blue-300 mt-2">
+                                                If the payment form doesn't appear,
+                                                <button type="button" class="text-blue-500 underline"
+                                                    id="retry-stripe-button">
+                                                    click here to try again
+                                                </button>
+                                            </p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -310,33 +352,29 @@
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="md:col-span-2">
-                                    <label for="billing-name"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full
-                                        Name</label>
-                                    <input type="text" id="billing-name" wire:model="billingName"
-                                        class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <flux:label for="billing-name" required>Full Name <span
+                                            class="text-red-500">*</span></flux:label>
+                                    <flux:input id="billing-name" wire:model="billingName" />
                                     @error('billingName')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <flux:error>{{ $message }}</flux:error>
                                     @enderror
                                 </div>
 
                                 <div>
-                                    <label for="billing-email"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                                    <input type="email" id="billing-email" wire:model="billingEmail"
-                                        class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <flux:label for="billing-email" required>Email <span class="text-red-500">*</span>
+                                    </flux:label>
+                                    <flux:input type="email" id="billing-email" wire:model="billingEmail" />
                                     @error('billingEmail')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <flux:error>{{ $message }}</flux:error>
                                     @enderror
                                 </div>
 
                                 <div>
-                                    <label for="billing-phone"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
-                                    <input type="tel" id="billing-phone" wire:model="billingPhone"
-                                        class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                                    <flux:label for="billing-phone" required>Phone <span class="text-red-500">*</span>
+                                    </flux:label>
+                                    <flux:input type="tel" id="billing-phone" wire:model="billingPhone" />
                                     @error('billingPhone')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <flux:error>{{ $message }}</flux:error>
                                     @enderror
                                 </div>
                             </div>
@@ -346,24 +384,26 @@
                     <!-- Navigation Buttons -->
                     <div class="mt-8 flex justify-between">
                         @if ($currentStep > 1)
-                            <button wire:click="prevStep"
-                                class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <flux:button wire:click="prevStep" variant="ghost">
                                 Previous
-                            </button>
+                            </flux:button>
                         @else
                             <div></div>
                         @endif
 
                         @if ($currentStep < $totalSteps)
-                            <button wire:click="nextStep"
-                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <flux:button wire:click="nextStep" variant="primary">
                                 Next
-                            </button>
+                            </flux:button>
                         @else
-                            <button wire:click="completeBooking"
-                                class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                Complete Purchase
-                            </button>
+                            @if ($paymentMethod === 'credit_card')
+                                <!-- No button here - using the one in the Stripe payment form -->
+                                <div></div>
+                            @else
+                                <flux:button wire:click="completeBooking" variant="primary">
+                                    Complete Purchase
+                                </flux:button>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -423,3 +463,426 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    @if (config('cashier.key'))
+        <!-- Stripe JS -->
+        <script src="https://js.stripe.com/v3/"></script>
+
+        <script>
+            let stripe = null;
+            let elements = null;
+            let paymentElement = null;
+            let isLoading = false;
+
+            // Initialize Stripe immediately
+            try {
+                stripe = Stripe('{{ config('cashier.key') }}');
+                console.log('Stripe initialized successfully');
+            } catch (error) {
+                console.error('Error initializing Stripe:', error);
+            }
+
+            // Function to manually initialize Stripe - defined in global scope
+            function initializeStripeManually() {
+                console.log('Manual Stripe initialization requested');
+                if (@json($currentStep) === 3 && @json($paymentMethod) === 'credit_card') {
+                    @this.call('createPaymentIntent');
+                }
+            }
+
+            // Make the function available globally
+            window.initializeStripeManually = initializeStripeManually;
+
+            document.addEventListener('livewire:initialized', function() {
+                // Check if there's a completed booking to redirect to
+                @this.call('checkCompletedBooking', {}, function(response) {
+                    if (response && response.redirect) {
+                        console.log('Found completed booking, redirecting to:', response.redirect);
+                        window.location.href = response.redirect;
+                        return;
+                    }
+
+                    // Continue with normal initialization if no redirect
+                    console.log('No completed booking found, continuing with initialization');
+                });
+
+                // Initialize Stripe
+                function initStripe() {
+                    if (!stripe) {
+                        try {
+                            const stripeKey = '{{ config('cashier.key') }}';
+                            console.log('Initializing Stripe with key:', stripeKey ? 'Key exists' : 'No key found');
+
+                            if (!stripeKey) {
+                                console.error('Stripe key is missing. Check your .env file for STRIPE_KEY');
+                                document.getElementById('payment-message').textContent =
+                                    'Stripe configuration is missing. Please contact support.';
+                                document.getElementById('payment-message').classList.remove('hidden');
+                                return;
+                            }
+
+                            stripe = Stripe(stripeKey);
+                            console.log('Stripe initialized successfully');
+                        } catch (error) {
+                            console.error('Error initializing Stripe:', error);
+                            document.getElementById('payment-message').textContent =
+                                'Error initializing payment system. Please try again later.';
+                            document.getElementById('payment-message').classList.remove('hidden');
+                        }
+                    }
+                }
+
+                // Set up Stripe Elements
+                function setupStripeElements(clientSecret) {
+                    try {
+                        console.log('Setting up Stripe Elements');
+
+                        // Ensure client secret is a string
+                        if (typeof clientSecret !== 'string') {
+                            console.error('Client secret is not a string:', typeof clientSecret);
+                            return;
+                        }
+
+                        // Validate client secret format
+                        if (!clientSecret || !clientSecret.startsWith('pi_')) {
+                            console.error('Invalid client secret format');
+                            return;
+                        }
+
+                        // First, clean up any existing elements
+                        if (paymentElement) {
+                            try {
+                                paymentElement.unmount();
+                            } catch (e) {
+                                console.log('Error unmounting payment element:', e);
+                            }
+                            paymentElement = null;
+                        }
+
+                        if (elements) {
+                            elements = null;
+                        }
+
+                        // Get the container
+                        const container = document.getElementById('payment-element-container');
+                        if (!container) {
+                            console.error('Payment element container not found');
+                            return;
+                        }
+
+                        // Create a fresh payment element div
+                        container.innerHTML = '<div id="payment-element" class="mb-4"></div>';
+
+                        // Create elements instance with the client secret
+                        elements = stripe.elements({
+                            clientSecret: clientSecret,
+                            appearance: {
+                                theme: document.documentElement.classList.contains('dark') ? 'night' : 'stripe',
+                                variables: {
+                                    colorPrimary: '#10b981', // teal-500
+                                }
+                            }
+                        });
+
+                        // Create the payment element
+                        paymentElement = elements.create('payment');
+
+                        // Add event listeners
+                        paymentElement.on('ready', function() {
+                            console.log('Payment element is ready');
+
+                            // Hide the loading message
+                            const loadingMessage = document.getElementById('stripe-loading-message');
+                            if (loadingMessage) {
+                                loadingMessage.classList.add('hidden');
+                            }
+                        });
+
+                        paymentElement.on('loaderror', function(event) {
+                            console.error('Payment element load error:', event);
+                            const messageContainer = document.getElementById('payment-message');
+                            if (messageContainer) {
+                                messageContainer.textContent = 'Error loading payment form. Please try again.';
+                                messageContainer.classList.remove('hidden');
+                            }
+                        });
+
+                        // Mount the element with a small delay to ensure the DOM is ready
+                        setTimeout(() => {
+                            try {
+                                const mountElement = document.getElementById('payment-element');
+                                if (mountElement) {
+                                    paymentElement.mount('#payment-element');
+                                    console.log('Payment element mounted successfully');
+                                } else {
+                                    console.error('Payment element mount target not found');
+                                }
+                            } catch (e) {
+                                console.error('Error mounting payment element:', e);
+                            }
+                        }, 100);
+
+                    } catch (error) {
+                        console.error('Error setting up Stripe Elements:', error);
+                        const messageContainer = document.getElementById('payment-message');
+                        if (messageContainer) {
+                            messageContainer.textContent = 'Error setting up payment form. Please try again.';
+                            messageContainer.classList.remove('hidden');
+                        }
+                    }
+                }
+
+                // Handle form submission
+                async function handleSubmit(e) {
+                    e.preventDefault();
+
+                    if (!stripe || !elements) {
+                        // Stripe.js hasn't loaded yet. Make sure to disable form submission until Stripe.js has loaded.
+                        return;
+                    }
+
+                    // Set loading state
+                    if (isLoading) return;
+                    isLoading = true;
+
+                    const submitButton = document.getElementById('submit-payment');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = 'Processing...';
+                    }
+
+                    const messageContainer = document.getElementById('payment-message');
+                    if (messageContainer) {
+                        messageContainer.classList.add('hidden');
+                        messageContainer.textContent = '';
+                    }
+
+                    try {
+                        const {
+                            error
+                        } = await stripe.confirmPayment({
+                            elements,
+                            confirmParams: {
+                                return_url: window.location.href,
+                            },
+                            redirect: 'if_required'
+                        });
+
+                        if (error) {
+                            console.error('Payment error:', error.message);
+                            // Show error message
+                            if (messageContainer) {
+                                messageContainer.textContent = error.message;
+                                messageContainer.classList.remove('hidden');
+                            } else {
+                                alert('Payment error: ' + error.message);
+                            }
+
+                            // Reset loading state
+                            isLoading = false;
+                            if (submitButton) {
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = 'Complete Purchase';
+                            }
+                        } else {
+                            // Payment succeeded
+                            isLoading = false;
+
+                            // Show a success message
+                            const messageContainer = document.getElementById('payment-message');
+                            if (messageContainer) {
+                                messageContainer.textContent = 'Payment successful! Redirecting to your tickets...';
+                                messageContainer.classList.remove('hidden');
+                                messageContainer.classList.remove('text-red-500');
+                                messageContainer.classList.add('text-green-500');
+                            }
+
+                            // Disable the form to prevent multiple submissions
+                            const submitButton = document.getElementById('submit-payment');
+                            if (submitButton) {
+                                submitButton.disabled = true;
+                                submitButton.innerHTML = 'Payment Successful!';
+                            }
+
+                            // Call the success handler with a slight delay to show the success message
+                            setTimeout(() => {
+                                // Call the Livewire method to complete the booking
+                                @this.call('handlePaymentSuccess', {}, function(response) {
+                                    // If the booking was successful but no redirect happened, force a redirect
+                                    setTimeout(() => {
+                                        if (document.getElementById('payment-message')) {
+                                            console.log('Forcing redirect to tickets page');
+                                            window.location.href =
+                                                '{{ route('tickets.view') }}?bookingId=' +
+                                                response.bookingId;
+                                        }
+                                    }, 2000);
+                                });
+                            }, 1500);
+                        }
+                    } catch (error) {
+                        console.error('Error confirming payment:', error);
+
+                        // Show error message
+                        if (messageContainer) {
+                            messageContainer.textContent = 'An unexpected error occurred. Please try again.';
+                            messageContainer.classList.remove('hidden');
+                        }
+
+                        // Reset loading state
+                        isLoading = false;
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Complete Purchase';
+                        }
+                    }
+                }
+
+                // Listen for Stripe configuration error
+                @this.on('stripe-configuration-error', (data) => {
+                    console.error('Stripe configuration error:', data.message);
+                    const messageContainer = document.getElementById('payment-message');
+                    if (messageContainer) {
+                        messageContainer.textContent = data.message ||
+                            'Error setting up payment system. Please try again later.';
+                        messageContainer.classList.remove('hidden');
+                    }
+
+                    // Hide the loading message
+                    const debugContainer = document.querySelector('#payment-element-container + div');
+                    if (debugContainer) {
+                        debugContainer.classList.add('hidden');
+                    }
+                });
+
+                // Listen for payment intent ready event
+                @this.on('payment-intent-ready', () => {
+                    console.log('Payment intent ready event received');
+
+                    // Get the client secret from the Livewire component
+                    const clientSecret = @this.get('clientSecret');
+
+                    console.log('Client secret type:', typeof clientSecret);
+
+                    if (!clientSecret) {
+                        console.error('No client secret available');
+                        const messageContainer = document.getElementById('payment-message');
+                        if (messageContainer) {
+                            messageContainer.textContent = 'Error setting up payment. Please try again.';
+                            messageContainer.classList.remove('hidden');
+                        }
+                        return;
+                    }
+
+                    console.log('Client secret received:', typeof clientSecret === 'string' ?
+                        clientSecret.substring(0, 10) + '...' : 'Not a string');
+
+                    // Set up Stripe Elements with a small delay to ensure DOM is ready
+                    setTimeout(() => {
+                        setupStripeElements(clientSecret);
+                    }, 500);
+                });
+
+                // Add event listener to submit button
+                document.addEventListener('click', function(e) {
+                    if (e.target && e.target.id === 'submit-payment') {
+                        handleSubmit(e);
+                    }
+                });
+
+                // Initialize payment form when step changes
+                @this.on('stepChanged', (step) => {
+                    console.log('Step changed to:', step);
+                    if (step === 3 && @this.get('paymentMethod') === 'credit_card') {
+                        console.log('On payment step with credit card selected, initializing payment form');
+                        // This will trigger the createPaymentIntent method on the server
+                        @this.call('createPaymentIntent');
+                    }
+                });
+
+                // Add event listener for retry button
+                document.addEventListener('click', function(e) {
+                    if (e.target && e.target.id === 'retry-stripe-button') {
+                        console.log('Retry button clicked');
+                        initializeStripeManually();
+                    }
+                });
+
+                // Check for payment intent in URL
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Initialize Stripe
+                    initStripe();
+
+                    // Add event listener for retry button (in case it's already in the DOM)
+                    const retryButton = document.getElementById('retry-stripe-button');
+                    if (retryButton) {
+                        retryButton.addEventListener('click', initializeStripeManually);
+                    }
+
+                    // Check if we have a payment intent in the URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const paymentIntentClientSecret = urlParams.get('payment_intent_client_secret');
+
+                    if (paymentIntentClientSecret) {
+                        // Check the payment status
+                        stripe.retrievePaymentIntent(paymentIntentClientSecret).then(function(result) {
+                            const paymentIntent = result.paymentIntent;
+
+                            if (paymentIntent.status === 'succeeded') {
+                                // Payment succeeded, show success message and notify Livewire
+                                const messageContainer = document.getElementById('payment-message');
+                                if (messageContainer) {
+                                    messageContainer.textContent =
+                                        'Payment successful! Redirecting to your tickets...';
+                                    messageContainer.classList.remove('hidden');
+                                    messageContainer.classList.remove('text-red-500');
+                                    messageContainer.classList.add('text-green-500');
+                                }
+
+                                // Call the success handler with a slight delay to show the success message
+                                setTimeout(() => {
+                                    // Call the Livewire method to complete the booking
+                                    @this.call('handlePaymentSuccess', {}, function(response) {
+                                        // If the booking was successful but no redirect happened, force a redirect
+                                        setTimeout(() => {
+                                            if (document.getElementById(
+                                                    'payment-message')) {
+                                                console.log(
+                                                    'Forcing redirect to tickets page'
+                                                );
+                                                if (response.redirect) {
+                                                    window.location.href =
+                                                        response.redirect;
+                                                } else {
+                                                    window.location.href =
+                                                        '{{ route('tickets.view') }}?bookingId=' +
+                                                        response.bookingId;
+                                                }
+                                            }
+                                        }, 2000);
+                                    });
+                                }, 1500);
+                            } else if (paymentIntent.status === 'processing') {
+                                // Payment is processing
+                                const messageContainer = document.getElementById('payment-message');
+                                if (messageContainer) {
+                                    messageContainer.textContent = 'Your payment is processing.';
+                                    messageContainer.classList.remove('hidden');
+                                }
+                            } else {
+                                // Payment failed
+                                const messageContainer = document.getElementById('payment-message');
+                                if (messageContainer) {
+                                    messageContainer.textContent =
+                                        'Your payment was not successful, please try again.';
+                                    messageContainer.classList.remove('hidden');
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+    @endif
+@endpush

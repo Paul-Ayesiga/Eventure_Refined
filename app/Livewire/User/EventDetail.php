@@ -49,10 +49,11 @@ class EventDetail extends Component
     {
         if ($this->event->event_repeat === 'Does not repeat') {
             // Single date event
+            $dateKey = Carbon::parse($this->event->start_date)->format('Y-m-d');
             $this->availableDates = [
-                $this->event->start_date => Carbon::parse($this->event->start_date)->format('D, M d, Y')
+                $dateKey => Carbon::parse($this->event->start_date)->format('D, M d, Y')
             ];
-            $this->selectedDate = $this->event->start_date;
+            $this->selectedDate = $dateKey;
         } else {
             // Multi-date event
             $startDate = Carbon::parse($this->event->start_date);
@@ -191,6 +192,8 @@ class EventDetail extends Component
         return view('livewire.user.event-detail', [
             'totalPrice' => $this->getTotalPrice(),
             'totalTickets' => $this->getTotalSelectedTickets()
-        ]);
+        ])->layout('components.layouts.public');
     }
+
+
 }
