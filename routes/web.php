@@ -106,11 +106,14 @@ Route::prefix('user')->group(function () {
 
     // Booking process
     Route::get('/events/{id}/book', App\Livewire\User\BookingProcess::class)->name('user.event.book');
+
+    // Payment status routes will be added here
 });
 
 
 // Public ticket routes
-Route::get('/tickets/view', App\Livewire\User\TicketView::class)->name('tickets.view');
+Route::get('/tickets/view/{bookingId}', App\Livewire\User\TicketView::class)->name('tickets.view');
+Route::get('/tickets/attendee/{attendeeId}', App\Livewire\User\AttendeeTicket::class)->name('user.attendee.ticket');
 
 
 require __DIR__ . '/auth.php';

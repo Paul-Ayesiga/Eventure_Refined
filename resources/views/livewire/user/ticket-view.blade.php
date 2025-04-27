@@ -113,34 +113,26 @@
 
                     <!-- Tickets -->
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                        <div class="flex justify-between items-center mb-4">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                             <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Your Tickets</h2>
-                            <div class="flex space-x-2">
-                                <button wire:click="printTickets"
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                    </svg>
-                                    Print All
-                                </button>
-                                <button wire:click="downloadTickets"
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    Download All
-                                </button>
+                            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                <flux:button wire:click="printTickets" icon="printer" variant="outline"
+                                    class="w-full sm:w-auto">
+                                    <span class="hidden sm:inline">Print All</span>
+                                    <span class="sm:hidden">Print</span>
+                                </flux:button>
+                                <flux:button wire:click="downloadTickets" icon="arrow-down-tray" variant="primary"
+                                    class="w-full sm:w-auto">
+                                    <span class="hidden sm:inline">Download All</span>
+                                    <span class="sm:hidden">Download</span>
+                                </flux:button>
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             @foreach ($attendees as $attendee)
                                 <div class="border dark:border-gray-700 rounded-lg p-4">
-                                    <div class="flex justify-between items-start">
+                                    <div class="flex flex-col sm:flex-row justify-between items-start gap-3">
                                         <div>
                                             <h3 class="font-semibold text-gray-800 dark:text-white">
                                                 {{ $attendee->first_name }} {{ $attendee->last_name }}</h3>
@@ -153,15 +145,20 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <button wire:click="shareTicket({{ $attendee->id }})"
-                                            class="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                                            </svg>
-                                            Share
-                                        </button>
+                                        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-3 sm:mt-0">
+                                            <flux:button
+                                                href="{{ route('user.attendee.ticket', ['attendeeId' => $attendee->id]) }}"
+                                                icon="eye" variant="outline" size="xs"
+                                                class="w-full sm:w-auto">
+                                                <span class="hidden sm:inline">View Ticket</span>
+                                                <span class="sm:hidden">View</span>
+                                            </flux:button>
+                                            <flux:button wire:click="shareTicket({{ $attendee->id }})" icon="share"
+                                                variant="outline" size="xs" class="w-full sm:w-auto">
+                                                <span class="hidden sm:inline">Share Ticket</span>
+                                                <span class="sm:hidden">Share</span>
+                                            </flux:button>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
@@ -178,7 +175,7 @@
                         <div class="mb-4 pb-4 border-b dark:border-gray-700">
                             <h3 class="font-semibold text-gray-800 dark:text-white mb-2">Tickets</h3>
                             <div class="space-y-2">
-                                @foreach ($booking->items as $item)
+                                @foreach ($booking->bookingItems as $item)
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">{{ $item->ticket->name }} x
                                             {{ $item->quantity }}</span>
@@ -200,14 +197,15 @@
 
                         <!-- Actions -->
                         <div class="mt-6">
-                            <a href="{{ route('user.event.detail', $event->id) }}"
-                                class="block w-full px-4 py-2 bg-blue-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center">
+                            <flux:button href="{{ route('user.event.detail', $event->id) }}" class="w-full"
+                                variant="primary">
                                 View Event Details
-                            </a>
-                            <a href="{{ route('user.bookings') }}"
-                                class="block w-full mt-3 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center">
-                                View All Bookings
-                            </a>
+                            </flux:button>
+                            <div class="mt-3">
+                                <flux:button href="{{ route('user.bookings') }}" class="w-full" variant="outline">
+                                    View All Bookings
+                                </flux:button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -222,10 +220,9 @@
                 </svg>
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-2">No Booking Found</h2>
                 <p class="text-gray-600 dark:text-gray-400 mb-6">We couldn't find the booking you're looking for.</p>
-                <a href="{{ route('user.bookings') }}"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <flux:button href="{{ route('user.bookings') }}" variant="primary">
                     View Your Bookings
-                </a>
+                </flux:button>
             </div>
         @endif
     </div>
@@ -235,8 +232,203 @@
     <script>
         document.addEventListener('livewire:initialized', function() {
             // Handle print tickets event
-            @this.on('print-tickets', function() {
+            @this.on('print-tickets', function(data) {
+                // Create a print-friendly version with all tickets
+                const originalContents = document.body.innerHTML;
+
+                // Start building the print content
+                let printContent = `
+                    <style>
+                        @media print {
+                            body { margin: 0; padding: 20px; background-color: white; }
+                            .ticket-container {
+                                max-width: 100%;
+                                margin-bottom: 30px;
+                                border: 1px solid #e2e8f0;
+                                border-radius: 8px;
+                                overflow: hidden;
+                                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                                page-break-after: always;
+                            }
+                            .ticket-header {
+                                background: linear-gradient(to right, #3b82f6, #2dd4bf);
+                                color: white;
+                                padding: 16px;
+                            }
+                            .ticket-body {
+                                padding: 24px;
+                                display: flex;
+                                flex-direction: row;
+                                justify-content: space-between;
+                            }
+                            .ticket-details {
+                                flex: 1;
+                                padding-right: 16px;
+                            }
+                            .ticket-qr {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                            }
+                            .qr-code-container {
+                                border: 1px solid #e2e8f0;
+                                padding: 8px;
+                                background: white;
+                            }
+                            .qr-code-container img {
+                                width: 160px;
+                                height: 160px;
+                            }
+                            .ticket-footer {
+                                background-color: #f9fafb;
+                                border-top: 1px solid #e5e7eb;
+                                padding: 12px;
+                                text-align: center;
+                                font-size: 12px;
+                                color: #6b7280;
+                            }
+                            .event-name {
+                                font-size: 18px;
+                                font-weight: bold;
+                                margin-bottom: 4px;
+                            }
+                            .org-name {
+                                font-size: 14px;
+                                opacity: 0.9;
+                            }
+                            .event-type {
+                                display: inline-block;
+                                padding: 2px 8px;
+                                background-color: rgba(20, 184, 166, 0.3);
+                                border-radius: 4px;
+                                font-size: 14px;
+                            }
+                            .section-title {
+                                font-size: 12px;
+                                text-transform: uppercase;
+                                color: #6b7280;
+                                font-weight: 500;
+                                margin-bottom: 4px;
+                            }
+                            .section-value {
+                                font-weight: 600;
+                                color: #111827;
+                            }
+                            .grid-2 {
+                                display: grid;
+                                grid-template-columns: 1fr 1fr;
+                                gap: 24px;
+                                margin-top: 24px;
+                            }
+                            .text-sm {
+                                font-size: 14px;
+                            }
+                            .text-xs {
+                                font-size: 12px;
+                            }
+                            .text-gray {
+                                color: #6b7280;
+                            }
+                            .mb-6 {
+                                margin-bottom: 24px;
+                            }
+                            .mb-3 {
+                                margin-bottom: 12px;
+                            }
+                            .mt-3 {
+                                margin-top: 12px;
+                            }
+                        }
+                    </style>
+                `;
+
+                // Add each ticket to the print content
+                if (data && data.attendees) {
+                    data.attendees.forEach(attendee => {
+                        printContent += `
+                            <div class="ticket-container">
+                                <div class="ticket-header">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div class="event-name">${data.event.name}</div>
+                                            <div class="org-name">${data.event.organisation.name}</div>
+                                        </div>
+                                        <div>
+                                            <span class="event-type">${data.event.event_type || 'online'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="ticket-body">
+                                    <div class="ticket-details">
+                                        <div class="mb-6">
+                                            <p class="text-sm text-gray">Coming soon</p>
+                                            <p class="section-value">${data.event.venue || 'Online Event'},
+                                                ${data.event.location ? data.event.location.country : ''}</p>
+                                            <p class="text-sm">${new Date(data.event.start_datetime).toLocaleString()} (${data.event.timezone})</p>
+                                        </div>
+
+                                        <div class="mb-6">
+                                            <p class="section-title">ISSUED TO</p>
+                                            <p class="section-value">${attendee.first_name} ${attendee.last_name}</p>
+                                        </div>
+
+                                        <div class="grid-2">
+                                            <div>
+                                                <p class="section-title">BOOKING REFERENCE</p>
+                                                <p class="section-value">${data.booking.booking_reference}</p>
+                                                <p class="text-xs text-gray mt-3">
+                                                    Booked On<br>
+                                                    ${new Date(data.booking.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p class="section-title">TICKET</p>
+                                                <p class="section-value">${attendee.ticket.name}</p>
+                                                <p class="text-xs text-gray">
+                                                    ${attendee.ticket.price > 0 ?
+                                                        parseFloat(attendee.ticket.price).toFixed(2) + ' ' + data.event.currency :
+                                                        'FREE'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="ticket-qr">
+                                        <div class="qr-code-container">
+                                            ${attendee.qrCode ?
+                                                `<img src="${attendee.qrCode}" alt="QR Code">` :
+                                                `<div style="width: 160px; height: 160px; display: flex; align-items: center; justify-content: center;">
+                                                                            <p style="text-align: center; color: #6b7280;">QR Code<br>Not Available</p>
+                                                                        </div>`
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="ticket-footer">
+                                    <p>© ${new Date().getFullYear()} ${data.event.organisation.name} - All Rights Reserved</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // Fallback to basic print if no data is provided
+                    printContent = `<p>No ticket data available for printing.</p>`;
+                }
+
+                // Set the print content
+                document.body.innerHTML = printContent;
+
+                // Print the document
                 window.print();
+
+                // Restore the original content
+                document.body.innerHTML = originalContents;
+
+                // Reinitialize Livewire
+                window.Livewire.rescan();
             });
         });
     </script>

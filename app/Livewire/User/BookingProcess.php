@@ -36,6 +36,7 @@ class BookingProcess extends Component
     public $billingName;
     public $billingEmail;
     public $billingPhone;
+    // Payment properties will be added here
 
     // For Stripe payment
     public $clientSecret;
@@ -236,6 +237,18 @@ class BookingProcess extends Component
                 return;
             }
 
+            // Ensure user is authenticated
+            if (!Auth::check()) {
+                Log::error('User not authenticated when creating payment intent');
+                $this->dispatch('toast', 'You must be logged in to complete this booking.', 'error');
+
+                // Dispatch an event to notify the frontend of the error
+                $this->dispatch('stripe-configuration-error', [
+                    'message' => 'You must be logged in to complete this booking.'
+                ]);
+                return;
+            }
+
             // Set up Stripe API key
             Stripe::setApiKey($stripeSecret);
 
@@ -251,16 +264,28 @@ class BookingProcess extends Component
             // Get currency from event or use default
             $currency = $this->event->currency ? strtolower($this->event->currency) : 'usd';
 
-            // Create a payment intent
-            $paymentIntent = PaymentIntent::create([
-                'amount' => $amount,
-                'currency' => $currency,
-                'metadata' => [
-                    'event_id' => $this->eventId,
-                    'user_id' => Auth::id(),
-                ],
-                'description' => 'Booking for ' . $this->event->name,
-            ]);
+            // Start database transaction for payment intent creation
+            DB::beginTransaction();
+
+            try {
+                // Create a payment intent
+                $paymentIntent = PaymentIntent::create([
+                    'amount' => $amount,
+                    'currency' => $currency,
+                    'metadata' => [
+                        'event_id' => $this->eventId,
+                        'user_id' => Auth::id(),
+                    ],
+                    'description' => 'Booking for ' . $this->event->name,
+                ]);
+
+                // Commit transaction if payment intent is created successfully
+                DB::commit();
+            } catch (\Exception $e) {
+                // Roll back transaction if payment intent creation fails
+                DB::rollBack();
+                throw $e;
+            }
 
             Log::info('Payment intent created successfully', [
                 'payment_intent_id' => $paymentIntent->id,
@@ -322,22 +347,57 @@ class BookingProcess extends Component
     public function handlePaymentSuccess()
     {
         try {
-            // Process the booking after successful payment
-            $booking = $this->completeBooking();
+            Log::info('handlePaymentSuccess called');
+
+            // For Stripe payments, we need to fill in some default values if they're missing
+            if (empty($this->billingName)) {
+                $this->billingName = Auth::user()->name;
+            }
+
+            if (empty($this->billingEmail)) {
+                $this->billingEmail = Auth::user()->email;
+            }
+
+            if (empty($this->billingPhone)) {
+                $this->billingPhone = '0000000000'; // Default phone number
+            }
+
+            // Process the booking after successful payment (skip validation for Stripe)
+            $booking = $this->completeBooking(true);
 
             if ($booking) {
                 // Store the booking ID in the session for redirect
                 session()->put('completed_booking_id', $booking->id);
 
-                // Use JavaScript to redirect to the tickets page
-                $this->dispatch('redirect-to', ['url' => route('tickets.view', ['bookingId' => $booking->id])]);
+                // Generate the redirect URL
+                $redirectUrl = route('tickets.view', ['bookingId' => $booking->id]);
 
-                // Return the booking ID for the JavaScript callback
-                return ['bookingId' => $booking->id, 'redirect' => route('tickets.view', ['bookingId' => $booking->id])];
+                Log::info('Payment success, redirecting to', [
+                    'booking_id' => $booking->id,
+                    'redirect_url' => $redirectUrl
+                ]);
+
+                // Return a direct redirect response
+                return redirect()->to($redirectUrl);
+            } else {
+                Log::error('Booking was not created in handlePaymentSuccess');
+                $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
+                return [
+                    'error' => true,
+                    'message' => 'Booking creation failed'
+                ];
             }
         } catch (\Exception $e) {
-            Log::error('Error handling payment success: ' . $e->getMessage());
+            Log::error('Error handling payment success: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
+            return [
+                'error' => true,
+                'message' => 'Exception: ' . $e->getMessage()
+            ];
         }
     }
 
@@ -401,7 +461,7 @@ class BookingProcess extends Component
         return false;
     }
 
-    public function completeBooking()
+    public function completeBooking($skipValidation = false)
     {
         // Check if event is archived
         if ($this->event->isArchived()) {
@@ -409,14 +469,24 @@ class BookingProcess extends Component
             return redirect()->route('user.event.detail', $this->eventId);
         }
 
-        // Validate payment information
-        $this->validate();
+        // Validate payment information (unless skipped)
+        if (!$skipValidation) {
+            try {
+                $this->validate();
+            } catch (\Exception $e) {
+                Log::error('Validation error: ' . $e->getMessage());
+                $this->dispatch('toast', 'Please fill in all required fields.', 'error');
+                return null;
+            }
+        }
 
         // Check if user is on waiting list for any selected tickets
         if ($this->isOnWaitingList()) {
             $this->dispatch('toast', 'Payment cannot be processed for tickets on waiting list.', 'error');
             return;
         }
+
+        // Additional payment methods will be added here
 
         try {
             DB::beginTransaction();
@@ -483,10 +553,22 @@ class BookingProcess extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Booking error: ' . $e->getMessage());
+            Log::error('Booking error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => Auth::id(),
+                'event_id' => $this->eventId,
+                'payment_method' => $this->paymentMethod,
+                'total_price' => $this->getTotalPrice(),
+                'total_tickets' => $this->getTotalTickets(),
+            ]);
             $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
+            return null;
         }
     }
+
+    // New payment methods will be implemented here
 
     public function render()
     {
@@ -495,6 +577,4 @@ class BookingProcess extends Component
             'totalTickets' => $this->getTotalTickets(),
         ])->layout('components.layouts.public');
     }
-
-
 }

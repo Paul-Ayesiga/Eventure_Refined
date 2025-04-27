@@ -19,6 +19,7 @@
         "livewire/volt": "^1.7.0",
         "predis/predis": "^2.3",
         "robsontenorio/mary": "^2.2",
+        "safaricom/mpesa": "^1.0",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-permission": "^6.16"
     },

@@ -260,6 +260,8 @@
                                     </div>
                                 </label>
 
+                                <!-- Additional payment options will be added here -->
+
                                 <script>
                                     // Initialize Stripe immediately when this section loads
                                     (function() {
@@ -314,9 +316,9 @@
                                         <div class="mt-4 text-center">
                                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Having trouble
                                                 with the payment form?</p>
-                                            <button type="button" wire:click="completeBooking"
+                                            <button type="button" wire:click="completeBooking(true)"
                                                 class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
-                                                Try alternative payment method
+                                                Try M-Pesa payment instead
                                             </button>
                                         </div>
                                     </div>
@@ -343,6 +345,32 @@
                                         </div>
                                     @endif
                                 </div>
+                            </div>
+                        @elseif ($paymentMethod === 'mpesa')
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">M-Pesa Payment
+                                </h3>
+
+                                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg mb-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-green-700 dark:text-green-300">
+                                                Enter your M-Pesa phone number below. You will receive a prompt on your
+                                                phone to complete the payment.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Additional payment form fields will be added here -->
                             </div>
                         @endif
 
@@ -399,6 +427,7 @@
                             @if ($paymentMethod === 'credit_card')
                                 <!-- No button here - using the one in the Stripe payment form -->
                                 <div></div>
+                                <!-- Additional payment buttons will be added here -->
                             @else
                                 <flux:button wire:click="completeBooking" variant="primary">
                                     Complete Purchase
@@ -659,12 +688,19 @@
                     }
 
                     try {
+                        // Log the current URL for debugging
+                        console.log('Current URL before confirmPayment:', window.location.href);
+
+                        // Create a clean return URL without any query parameters
+                        const baseUrl = window.location.origin + window.location.pathname;
+                        console.log('Base URL for return_url:', baseUrl);
+
                         const {
                             error
                         } = await stripe.confirmPayment({
                             elements,
                             confirmParams: {
-                                return_url: window.location.href,
+                                return_url: baseUrl, // Use the clean URL without query parameters
                             },
                             redirect: 'if_required'
                         });
@@ -708,18 +744,9 @@
                             // Call the success handler with a slight delay to show the success message
                             setTimeout(() => {
                                 // Call the Livewire method to complete the booking
-                                @this.call('handlePaymentSuccess', {}, function(response) {
-                                    // If the booking was successful but no redirect happened, force a redirect
-                                    setTimeout(() => {
-                                        if (document.getElementById('payment-message')) {
-                                            console.log('Forcing redirect to tickets page');
-                                            window.location.href =
-                                                '{{ route('tickets.view') }}?bookingId=' +
-                                                response.bookingId;
-                                        }
-                                    }, 2000);
-                                });
-                            }, 1500);
+                                // The PHP method now returns a redirect response directly
+                                @this.call('handlePaymentSuccess');
+                            }, 2000);
                         }
                     } catch (error) {
                         console.error('Error confirming payment:', error);
@@ -753,6 +780,14 @@
                     const debugContainer = document.querySelector('#payment-element-container + div');
                     if (debugContainer) {
                         debugContainer.classList.add('hidden');
+                    }
+                });
+
+                // Listen for redirect-to event
+                @this.on('redirect-to', (data) => {
+                    console.log('Received redirect-to event with URL:', data.url);
+                    if (data.url) {
+                        window.location.href = data.url;
                     }
                 });
 
@@ -843,25 +878,8 @@
                                 // Call the success handler with a slight delay to show the success message
                                 setTimeout(() => {
                                     // Call the Livewire method to complete the booking
-                                    @this.call('handlePaymentSuccess', {}, function(response) {
-                                        // If the booking was successful but no redirect happened, force a redirect
-                                        setTimeout(() => {
-                                            if (document.getElementById(
-                                                    'payment-message')) {
-                                                console.log(
-                                                    'Forcing redirect to tickets page'
-                                                );
-                                                if (response.redirect) {
-                                                    window.location.href =
-                                                        response.redirect;
-                                                } else {
-                                                    window.location.href =
-                                                        '{{ route('tickets.view') }}?bookingId=' +
-                                                        response.bookingId;
-                                                }
-                                            }
-                                        }, 2000);
-                                    });
+                                    // The PHP method now returns a redirect response directly
+                                    @this.call('handlePaymentSuccess');
                                 }, 1500);
                             } else if (paymentIntent.status === 'processing') {
                                 // Payment is processing
