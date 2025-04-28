@@ -260,6 +260,20 @@
                                     </div>
                                 </label>
 
+                                <!-- Flutterwave Option -->
+                                <label
+                                    class="flex items-start p-4 border rounded-lg cursor-pointer {{ $paymentMethod === 'flutterwave' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-700' }}">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" wire:model.live="paymentMethod" value="flutterwave"
+                                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <span class="font-medium text-gray-800 dark:text-white">Flutterwave</span>
+                                        <p class="text-gray-500 dark:text-gray-400">Pay with card, mobile money, or
+                                            bank transfer</p>
+                                    </div>
+                                </label>
+
                                 <!-- Additional payment options will be added here -->
 
                                 <script>
@@ -346,6 +360,42 @@
                                     @endif
                                 </div>
                             </div>
+                        @elseif ($paymentMethod === 'flutterwave')
+                            <div class="mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Flutterwave
+                                    Payment</h3>
+
+                                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                                Click the "Pay Now" button below to complete your payment securely with
+                                                Flutterwave.
+                                                You can pay with card, mobile money, or bank transfer.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Flutterwave payment button -->
+                                <div class="mt-4 flex justify-center">
+                                    <button type="button" id="flutterwave-pay-button"
+                                        class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                        Pay Now with Flutterwave
+                                    </button>
+                                </div>
+
+                                <!-- Payment message container -->
+                                <div id="flutterwave-message" class="mt-4 text-center hidden"></div>
+                            </div>
                         @elseif ($paymentMethod === 'mpesa')
                             <div class="mb-6">
                                 <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">M-Pesa Payment
@@ -427,7 +477,9 @@
                             @if ($paymentMethod === 'credit_card')
                                 <!-- No button here - using the one in the Stripe payment form -->
                                 <div></div>
-                                <!-- Additional payment buttons will be added here -->
+                            @elseif ($paymentMethod === 'flutterwave')
+                                <!-- No button here - using the one in the Flutterwave payment form -->
+                                <div></div>
                             @else
                                 <flux:button wire:click="completeBooking" variant="primary">
                                     Complete Purchase
@@ -497,7 +549,135 @@
     @if (config('cashier.key'))
         <!-- Stripe JS -->
         <script src="https://js.stripe.com/v3/"></script>
+    @endif
 
+    @if (config('flutterwave.public_key'))
+        <!-- Flutterwave JS -->
+        <script src="https://checkout.flutterwave.com/v3.js"></script>
+
+        <script>
+            // Flutterwave payment implementation
+            document.addEventListener('livewire:initialized', function() {
+                // Listen for Flutterwave payment ready event
+                @this.on('flutterwave-payment-ready', function(paymentData) {
+                    console.log('Flutterwave payment data received:', paymentData);
+
+                    // Extract the payment data (it might be wrapped in an array)
+                    const data = Array.isArray(paymentData) ? paymentData[0] : paymentData;
+
+                    // Add click event listener to the payment button
+                    const payButton = document.getElementById('flutterwave-pay-button');
+                    if (payButton) {
+                        // Remove any existing event listeners
+                        payButton.replaceWith(payButton.cloneNode(true));
+
+                        // Get the fresh button reference
+                        const freshButton = document.getElementById('flutterwave-pay-button');
+
+                        // Add the event listener
+                        freshButton.addEventListener('click', function() {
+                            makeFlutterwavePayment(data);
+                        });
+
+                        // Trigger the payment immediately for testing
+                        console.log('Automatically triggering Flutterwave payment');
+                        setTimeout(() => {
+                            freshButton.click();
+                        }, 500);
+                    }
+                });
+
+                // Listen for Flutterwave configuration error
+                @this.on('flutterwave-configuration-error', function(data) {
+                    console.error('Flutterwave configuration error:', data.message);
+                    const messageContainer = document.getElementById('flutterwave-message');
+                    if (messageContainer) {
+                        messageContainer.textContent = data.message ||
+                            'Error setting up payment system. Please try again later.';
+                        messageContainer.classList.remove('hidden');
+                        messageContainer.classList.add('text-red-500');
+                    }
+                });
+
+                // Function to make Flutterwave payment
+                function makeFlutterwavePayment(paymentData) {
+                    try {
+                        console.log('Initializing Flutterwave payment with data:', paymentData);
+
+                        // Validate payment data
+                        if (!paymentData || !paymentData.public_key || !paymentData.tx_ref) {
+                            throw new Error('Invalid payment data');
+                        }
+
+                        // Show a message that we're initializing payment
+                        const messageContainer = document.getElementById('flutterwave-message');
+                        if (messageContainer) {
+                            messageContainer.textContent = 'Initializing payment...';
+                            messageContainer.classList.remove('hidden');
+                            messageContainer.classList.add('text-blue-500');
+                            messageContainer.classList.remove('text-red-500');
+                        }
+
+                        // Initialize Flutterwave checkout
+                        FlutterwaveCheckout({
+                            public_key: paymentData.public_key,
+                            tx_ref: paymentData.tx_ref,
+                            amount: paymentData.amount,
+                            currency: paymentData.currency,
+                            payment_options: paymentData.payment_options,
+                            redirect_url: paymentData.redirect_url,
+                            meta: paymentData.meta,
+                            customer: paymentData.customer,
+                            customizations: paymentData.customizations,
+                            callback: function(response) {
+                                console.log('Flutterwave payment response:', response);
+                                // The callback is just for information, actual processing happens on the redirect
+
+                                // Show success message
+                                if (messageContainer) {
+                                    messageContainer.textContent = 'Payment processing...';
+                                    messageContainer.classList.remove('text-red-500');
+                                    messageContainer.classList.add('text-green-500');
+                                }
+                            },
+                            onclose: function() {
+                                console.log('Flutterwave payment modal closed');
+
+                                // Show closed message
+                                if (messageContainer) {
+                                    messageContainer.textContent = 'Payment cancelled. You can try again.';
+                                    messageContainer.classList.remove('text-blue-500');
+                                    messageContainer.classList.add('text-yellow-500');
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error initializing Flutterwave payment:', error);
+                        const messageContainer = document.getElementById('flutterwave-message');
+                        if (messageContainer) {
+                            messageContainer.textContent = 'Error initializing payment: ' + error.message;
+                            messageContainer.classList.remove('hidden');
+                            messageContainer.classList.add('text-red-500');
+                        }
+                    }
+                }
+
+                // Check if we have Flutterwave payment success in session
+                if (@json(session()->has('flutterwave_payment_success'))) {
+                    console.log('Flutterwave payment success detected in session');
+                    const txRef = @json(session()->get('flutterwave_tx_ref'));
+                    const flwRef = @json(session()->get('flutterwave_flw_ref'));
+
+                    if (txRef && flwRef) {
+                        // Call the Livewire method to handle the callback
+                        @this.call('handleFlutterwaveCallback', 'successful', txRef, flwRef);
+                    }
+                }
+            });
+        </script>
+    @endif
+
+    @if (config('cashier.key'))
         <script>
             let stripe = null;
             let elements = null;

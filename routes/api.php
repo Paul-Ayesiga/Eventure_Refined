@@ -18,4 +18,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Payment API routes will be added here
+// Payment API routes
+Route::post('/webhooks/flutterwave', [\App\Http\Controllers\FlutterwaveController::class, 'handleWebhook']);

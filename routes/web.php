@@ -107,7 +107,8 @@ Route::prefix('user')->group(function () {
     // Booking process
     Route::get('/events/{id}/book', App\Livewire\User\BookingProcess::class)->name('user.event.book');
 
-    // Payment status routes will be added here
+    // Payment routes
+    Route::get('/payment/flutterwave/callback', [\App\Http\Controllers\FlutterwaveController::class, 'handleCallback'])->name('payment.flutterwave.callback');
 });
 
 

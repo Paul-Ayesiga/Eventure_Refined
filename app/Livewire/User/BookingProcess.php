@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\Attendee;
 use App\Models\BookingDate;
+use App\Models\FlutterwaveTransaction;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,7 @@ class BookingProcess extends Component
 
         if ($this->currentStep === 3) {
             $rules = array_merge($rules, [
-                'paymentMethod' => 'required|in:credit_card,paypal',
+                'paymentMethod' => 'required|in:credit_card,paypal,flutterwave',
                 'billingName' => 'required|string|max:255',
                 'billingEmail' => 'required|email|max:255',
                 'billingPhone' => 'required|string|max:20',
@@ -209,9 +210,13 @@ class BookingProcess extends Component
             // Notify the frontend that the step has changed
             $this->dispatch('stepChanged', $this->currentStep);
 
-            // If moving to payment step and credit card is selected, create payment intent
-            if ($this->currentStep === 3 && $this->paymentMethod === 'credit_card') {
-                $this->createPaymentIntent();
+            // If moving to payment step, initialize the selected payment method
+            if ($this->currentStep === 3) {
+                if ($this->paymentMethod === 'credit_card') {
+                    $this->createPaymentIntent();
+                } else if ($this->paymentMethod === 'flutterwave') {
+                    $this->initializeFlutterwavePayment();
+                }
             }
         }
     }
@@ -422,9 +427,14 @@ class BookingProcess extends Component
      */
     public function updatedPaymentMethod($value)
     {
-        if ($value === 'credit_card' && $this->currentStep === 3) {
-            // Initialize Stripe payment when switching to credit card
-            $this->createPaymentIntent();
+        if ($this->currentStep === 3) {
+            if ($value === 'credit_card') {
+                // Initialize Stripe payment when switching to credit card
+                $this->createPaymentIntent();
+            } else if ($value === 'flutterwave') {
+                // Initialize Flutterwave payment when switching to Flutterwave
+                $this->initializeFlutterwavePayment();
+            }
         }
     }
 
@@ -568,7 +578,181 @@ class BookingProcess extends Component
         }
     }
 
-    // New payment methods will be implemented here
+    /**
+     * Initialize Flutterwave payment
+     */
+    public function initializeFlutterwavePayment()
+    {
+        try {
+            // Check if Flutterwave is configured
+            $flutterwavePublicKey = config('flutterwave.public_key');
+
+            if (!$flutterwavePublicKey) {
+                Log::warning('Flutterwave keys not configured. FLUTTERWAVE_PUBLIC_KEY must be set in .env');
+                $this->dispatch('toast', 'Payment processing is not configured. Please contact support.', 'error');
+
+                // Dispatch an event to notify the frontend of the error
+                $this->dispatch('flutterwave-configuration-error', [
+                    'message' => 'Flutterwave API keys are missing. Please check your configuration.'
+                ]);
+                return;
+            }
+
+            // Ensure user is authenticated
+            if (!Auth::check()) {
+                Log::error('User not authenticated when initializing Flutterwave payment');
+                $this->dispatch('toast', 'You must be logged in to complete this booking.', 'error');
+                return;
+            }
+
+            // Calculate amount
+            $amount = $this->getTotalPrice();
+
+            // Make sure we have a valid amount
+            if ($amount <= 0) {
+                $this->dispatch('toast', 'Invalid payment amount.', 'error');
+                return;
+            }
+
+            // Get currency from event or use default
+            $currency = $this->event->currency ? strtoupper($this->event->currency) : 'UGX';
+
+            // For Flutterwave, we might need to convert UGX to RWF
+            $displayCurrency = $currency;
+            $apiCurrency = config('flutterwave.currency', 'RWF');
+
+            // Generate a unique transaction reference
+            $txRef = FlutterwaveTransaction::generateTxRef();
+
+            // Create a transaction record
+            $transaction = FlutterwaveTransaction::create([
+                'user_id' => Auth::id(),
+                'amount' => $amount,
+                'currency' => $apiCurrency,
+                'display_currency' => $displayCurrency,
+                'tx_ref' => $txRef,
+                'status' => 'pending',
+                'metadata' => [
+                    'event_id' => $this->eventId,
+                    'user_id' => Auth::id(),
+                    'tickets' => $this->selectedTickets,
+                ]
+            ]);
+
+            // Prepare payment data for the frontend
+            $paymentData = [
+                'public_key' => $flutterwavePublicKey,
+                'tx_ref' => $txRef,
+                'amount' => $amount,
+                'currency' => $apiCurrency,
+                'payment_options' => config('flutterwave.payment_options', 'card, mobilemoneyuganda'),
+                'redirect_url' => route('payment.flutterwave.callback'),
+                'customer' => [
+                    'email' => $this->billingEmail ?: Auth::user()->email,
+                    'phone_number' => $this->billingPhone ?: '0000000000',
+                    'name' => $this->billingName ?: Auth::user()->name,
+                ],
+                'customizations' => [
+                    'title' => $this->event->name,
+                    'description' => 'Payment for event tickets',
+                    'logo' => $this->event->organisation->logo_url ?? asset('images/logo.png'),
+                ],
+                'meta' => [
+                    'event_id' => $this->eventId,
+                    'user_id' => Auth::id(),
+                ]
+            ];
+
+            // Store transaction ID in session for callback verification
+            session()->put('flutterwave_tx_ref', $txRef);
+
+            // Dispatch event to initialize Flutterwave payment on the frontend
+            // Pass the payment data directly, not as an array
+            $this->dispatch('flutterwave-payment-ready', $paymentData);
+
+            Log::info('Flutterwave payment initialized', [
+                'tx_ref' => $txRef,
+                'amount' => $amount,
+                'currency' => $apiCurrency
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Flutterwave payment initialization error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $errorMessage = 'Error initializing payment: ' . $e->getMessage();
+            $this->dispatch('toast', $errorMessage, 'error');
+        }
+    }
+
+    /**
+     * Handle Flutterwave payment callback
+     */
+    public function handleFlutterwaveCallback($status, $txRef, $flwRef)
+    {
+        try {
+            Log::info('Flutterwave callback received', [
+                'status' => $status,
+                'tx_ref' => $txRef,
+                'flw_ref' => $flwRef
+            ]);
+
+            // Find the transaction
+            $transaction = FlutterwaveTransaction::where('tx_ref', $txRef)->first();
+
+            if (!$transaction) {
+                Log::error('Flutterwave transaction not found', ['tx_ref' => $txRef]);
+                $this->dispatch('toast', 'Transaction not found. Please contact support.', 'error');
+                return;
+            }
+
+            // Update transaction status
+            $transaction->status = $status;
+            $transaction->flw_ref = $flwRef;
+            $transaction->save();
+
+            if ($status === 'successful') {
+                // Process the booking
+                $booking = $this->completeBooking(true);
+
+                if ($booking) {
+                    // Update transaction with booking ID
+                    $transaction->booking_id = $booking->id;
+                    $transaction->save();
+
+                    // Store the booking ID in the session for redirect
+                    session()->put('completed_booking_id', $booking->id);
+
+                    // Generate the redirect URL
+                    $redirectUrl = route('tickets.view', ['bookingId' => $booking->id]);
+
+                    Log::info('Flutterwave payment success, redirecting to', [
+                        'booking_id' => $booking->id,
+                        'redirect_url' => $redirectUrl
+                    ]);
+
+                    // Return a direct redirect response
+                    return redirect()->to($redirectUrl);
+                } else {
+                    Log::error('Booking was not created after Flutterwave payment');
+                    $this->dispatch('toast', 'An error occurred while processing your booking. Please try again.', 'error');
+                }
+            } else {
+                Log::warning('Flutterwave payment not successful', [
+                    'status' => $status,
+                    'tx_ref' => $txRef
+                ]);
+                $this->dispatch('toast', 'Payment was not successful. Please try again.', 'error');
+            }
+        } catch (\Exception $e) {
+            Log::error('Error handling Flutterwave callback: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('toast', 'An error occurred while processing your payment. Please try again.', 'error');
+        }
+    }
 
     public function render()
     {
