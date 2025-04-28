@@ -192,6 +192,6 @@ class AttendeeTicket extends Component
 
     public function render()
     {
-        return view('livewire.user.attendee-ticket');
+        return view('livewire.user.attendee-ticket')->layout('components.layouts.public');
     }
 }

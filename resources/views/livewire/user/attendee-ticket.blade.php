@@ -197,7 +197,7 @@
     </div>
 
     <!-- Share Modal -->
-    <flux:modal name="share-ticket" class="md:max-w-2xl" x-data="{ shareUrl: window.location.href, shareMessage: 'Check out my ticket: ' }">
+    <flux:modal name="share-ticket" class="md:max-w-2xl">
         <div class="space-y-6">
             <div>
                 <flux:heading size="lg">Share Ticket</flux:heading>
@@ -206,10 +206,8 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 <!-- WhatsApp -->
-                <a href="https://wa.me/?text=Check%20out%20my%20ticket" id="shareWhatsApp" target="_blank"
-                    rel="noopener noreferrer"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition"
-                    onclick="this.href='https://wa.me/?text=' + encodeURIComponent(shareMessage + document.getElementById('shareUrl').value)">
+                <a href="#" id="shareWhatsApp" target="_blank" rel="noopener noreferrer"
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-green-500 text-white hover:bg-green-600 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="currentColor"
                         viewBox="0 0 24 24">
                         <path
@@ -219,10 +217,8 @@
                 </a>
 
                 <!-- Email -->
-                <a href="mailto:?subject=Event%20Ticket&body=Check%20out%20my%20ticket" id="shareEmail"
-                    target="_blank"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
-                    onclick="this.href='mailto:?subject=' + encodeURIComponent('Event Ticket') + '&body=' + encodeURIComponent(shareMessage + document.getElementById('shareUrl').value)">
+                <a href="#" id="shareEmail" target="_blank"
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -232,10 +228,8 @@
                 </a>
 
                 <!-- Facebook Messenger -->
-                <a href="https://www.facebook.com/dialog/send?link=https%3A%2F%2Fexample.com&app_id=123456789&redirect_uri=https%3A%2F%2Fexample.com"
-                    id="shareFacebook" target="_blank" rel="noopener noreferrer"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
-                    onclick="this.href='https://www.facebook.com/dialog/send?link=' + encodeURIComponent(document.getElementById('shareUrl').value) + '&app_id=123456789&redirect_uri=' + encodeURIComponent(window.location.origin)">
+                <a href="#" id="shareFacebook" target="_blank" rel="noopener noreferrer"
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="currentColor"
                         viewBox="0 0 24 24">
                         <path
@@ -245,10 +239,8 @@
                 </a>
 
                 <!-- Twitter/X Direct Message -->
-                <a href="https://twitter.com/messages/compose?text=Check%20out%20my%20ticket:%20https%3A%2F%2Fexample.com"
-                    id="shareTwitter" target="_blank" rel="noopener noreferrer"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-black text-white hover:bg-gray-800 transition"
-                    onclick="this.href='https://twitter.com/messages/compose?text=' + encodeURIComponent(shareMessage + document.getElementById('shareUrl').value)">
+                <a href="#" id="shareTwitter" target="_blank" rel="noopener noreferrer"
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-black text-white hover:bg-gray-800 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="currentColor"
                         viewBox="0 0 24 24">
                         <path
@@ -259,10 +251,8 @@
                 </a>
 
                 <!-- LinkedIn Message -->
-                <a href="https://www.linkedin.com/messaging/compose/?body=Check%20out%20my%20ticket:%20https%3A%2F%2Fexample.com"
-                    id="shareLinkedIn" target="_blank" rel="noopener noreferrer"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-700 text-white hover:bg-blue-800 transition"
-                    onclick="this.href='https://www.linkedin.com/messaging/compose/?body=' + encodeURIComponent(shareMessage + document.getElementById('shareUrl').value)">
+                <a href="#" id="shareLinkedIn" target="_blank" rel="noopener noreferrer"
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-blue-700 text-white hover:bg-blue-800 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="currentColor"
                         viewBox="0 0 24 24">
                         <path
@@ -273,8 +263,7 @@
 
                 <!-- Copy Link -->
                 <a href="javascript:void(0)" id="copyLink"
-                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-500 text-white hover:bg-gray-600 transition"
-                    onclick="copyToClipboard(document.getElementById('shareUrl').value); this.querySelector('.copy-feedback').classList.remove('hidden'); setTimeout(() => { this.querySelector('.copy-feedback').classList.add('hidden'); }, 2000);">
+                    class="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-500 text-white hover:bg-gray-600 transition">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-1" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -290,8 +279,7 @@
                 <flux:text>Or share this link:</flux:text>
                 <div class="flex flex-col sm:flex-row mt-2 gap-2 sm:gap-0">
                     <flux:input id="shareUrl" readonly />
-                    <flux:button id="copyUrlButton" class="w-full sm:w-auto sm:rounded-l-none" variant="primary"
-                        onclick="copyToClipboard(document.getElementById('shareUrl').value); this.textContent = 'Copied!'; setTimeout(() => { this.textContent = 'Copy'; }, 2000);">
+                    <flux:button id="copyUrlButton" class="w-full sm:w-auto sm:rounded-l-none" variant="primary">
                         Copy
                     </flux:button>
                 </div>
@@ -383,7 +371,7 @@
 
             // Share ticket functionality
             @this.on('share-ticket', (data) => {
-                // Set the share URL and message in the Alpine.js data
+                // Set the share URL and message
                 const shareUrl = data.url || window.location.href;
                 const shareMessage = data.message || 'Check out my ticket: ';
 
@@ -394,15 +382,56 @@
                 window.shareMessage = shareMessage;
 
                 // Update all share links with the current URL and message
-                document.querySelectorAll('[id^="share"]').forEach(element => {
-                    if (element.id === 'shareUrl' || element.id === 'copyUrlButton') return;
+                updateShareLinks(shareUrl, shareMessage);
 
-                    // The links now use onclick handlers to set their href dynamically
+                // Set up copy button
+                document.getElementById('copyUrlButton').addEventListener('click', function() {
+                    copyToClipboard(document.getElementById('shareUrl').value);
+                    this.textContent = 'Copied!';
+                    setTimeout(() => {
+                        this.textContent = 'Copy';
+                    }, 2000);
                 });
             });
 
+            // Function to update all share links
+            function updateShareLinks(shareUrl, shareMessage) {
+                // WhatsApp
+                document.getElementById('shareWhatsApp').href = 'https://wa.me/?text=' +
+                    encodeURIComponent(shareMessage + shareUrl);
+
+                // Email
+                document.getElementById('shareEmail').href = 'mailto:?subject=' +
+                    encodeURIComponent('Event Ticket') + '&body=' +
+                    encodeURIComponent(shareMessage + shareUrl);
+
+                // Facebook Messenger
+                document.getElementById('shareFacebook').href = 'https://www.facebook.com/dialog/send?link=' +
+                    encodeURIComponent(shareUrl) + '&app_id=123456789&redirect_uri=' +
+                    encodeURIComponent(window.location.origin);
+
+                // Twitter/X Direct Message
+                document.getElementById('shareTwitter').href = 'https://twitter.com/messages/compose?text=' +
+                    encodeURIComponent(shareMessage + shareUrl);
+
+                // LinkedIn Message
+                document.getElementById('shareLinkedIn').href =
+                    'https://www.linkedin.com/messaging/compose/?body=' +
+                    encodeURIComponent(shareMessage + shareUrl);
+
+                // Copy Link
+                document.getElementById('copyLink').addEventListener('click', function() {
+                    copyToClipboard(shareUrl);
+                    const feedback = this.querySelector('.copy-feedback');
+                    feedback.classList.remove('hidden');
+                    setTimeout(() => {
+                        feedback.classList.add('hidden');
+                    }, 2000);
+                });
+            }
+
             // Helper function to copy text to clipboard
-            window.copyToClipboard = async function(text) {
+            async function copyToClipboard(text) {
                 try {
                     // Try to use the modern Clipboard API
                     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -422,7 +451,10 @@
                 } catch (err) {
                     console.error('Failed to copy text: ', err);
                 }
-            };
+            }
+
+            // Make copyToClipboard available globally
+            window.copyToClipboard = copyToClipboard;
         });
     </script>
 @endpush
