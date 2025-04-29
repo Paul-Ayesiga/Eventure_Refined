@@ -46,6 +46,13 @@ class TicketView extends Component
 
         // Get attendees for this booking
         $this->attendees = Attendee::where('booking_id', $this->bookingId)->get();
+
+        // Log the number of attendees found for debugging
+        Log::info('Loaded attendees for booking', [
+            'booking_id' => $this->bookingId,
+            'attendees_count' => $this->attendees->count(),
+            'attendee_ids' => $this->attendees->pluck('id')->toArray()
+        ]);
     }
 
     public function downloadTickets()

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutterwave Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f3f4f6;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flutterwave Test Page</h1>
+    <p>This is a simple test page to verify if the Flutterwave integration works correctly.</p>
+    
+    <button id="pay-button">Pay with Flutterwave</button>
+    
+    <div id="message" class="message">Click the button to test Flutterwave payment</div>
+    
+    <!-- Flutterwave JS -->
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const payButton = document.getElementById('pay-button');
+            const messageDiv = document.getElementById('message');
+            
+            // Check if Flutterwave is loaded
+            if (typeof FlutterwaveCheckout !== 'function') {
+                messageDiv.textContent = 'ERROR: FlutterwaveCheckout is not defined. The Flutterwave script may not be loading correctly.';
+                messageDiv.style.color = 'red';
+                console.error('FlutterwaveCheckout is not defined');
+                return;
+            }
+            
+            messageDiv.textContent = 'Flutterwave script loaded successfully. Click the button to test.';
+            
+            payButton.addEventListener('click', function() {
+                messageDiv.textContent = 'Initializing payment...';
+                
+                try {
+                    // Get your public key from the Flutterwave dashboard
+                    const publicKey = 'FLWPUBK_TEST-2038a642bb755db4e67ca96c7fc68f4b-X'; // Replace with your actual public key
+                    const txRef = 'FLW-TEST-' + Date.now();
+                    const amount = 1000; // 1000 UGX
+                    
+                    console.log('Initializing Flutterwave with:', {
+                        publicKey,
+                        txRef,
+                        amount
+                    });
+                    
+                    FlutterwaveCheckout({
+                        public_key: publicKey,
+                        tx_ref: txRef,
+                        amount: amount,
+                        currency: 'UGX',
+                        payment_options: 'card, mobilemoneyuganda',
+                        redirect_url: window.location.href,
+                        customer: {
+                            email: 'test@example.com',
+                            phone_number: '0700000000',
+                            name: 'Test User',
+                        },
+                        customizations: {
+                            title: 'Test Payment',
+                            description: 'Test payment for Flutterwave integration',
+                            logo: 'https://cdn.pixabay.com/photo/2018/05/08/21/29/paypal-3384015_1280.png',
+                        },
+                        callback: function(response) {
+                            console.log('Payment response:', response);
+                            messageDiv.textContent = 'Payment callback received: ' + JSON.stringify(response);
+                        },
+                        onclose: function() {
+                            console.log('Payment modal closed');
+                            messageDiv.textContent = 'Payment modal closed. You can try again.';
+                        }
+                    });
+                    
+                    console.log('FlutterwaveCheckout called successfully');
+                } catch (error) {
+                    console.error('Error initializing Flutterwave payment:', error);
+                    messageDiv.textContent = 'Error: ' + error.message;
+                    messageDiv.style.color = 'red';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

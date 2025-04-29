@@ -388,40 +388,21 @@
                                 <!-- Flutterwave payment button -->
                                 <div class="mt-4 flex justify-center">
                                     <button type="button" id="flutterwave-pay-button"
+                                        onclick="makeFlutterwavePayment()"
                                         class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                         Pay Now with Flutterwave
                                     </button>
                                 </div>
 
+
+
                                 <!-- Payment message container -->
-                                <div id="flutterwave-message" class="mt-4 text-center hidden"></div>
-                            </div>
-                        @elseif ($paymentMethod === 'mpesa')
-                            <div class="mb-6">
-                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">M-Pesa Payment
-                                </h3>
-
-                                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg mb-4">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0">
-                                            <svg class="h-5 w-5 text-green-500" xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd"
-                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm text-green-700 dark:text-green-300">
-                                                Enter your M-Pesa phone number below. You will receive a prompt on your
-                                                phone to complete the payment.
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div id="flutterwave-message"
+                                    class="mt-4 text-center p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                    Click the "Pay Now with Flutterwave" button to proceed with payment
                                 </div>
-
-                                <!-- Additional payment form fields will be added here -->
                             </div>
+
                         @endif
 
                         <!-- Billing Information -->
@@ -551,131 +532,83 @@
         <script src="https://js.stripe.com/v3/"></script>
     @endif
 
-    @if (config('flutterwave.public_key'))
-        <!-- Flutterwave JS -->
-        <script src="https://checkout.flutterwave.com/v3.js"></script>
+    <!-- Flutterwave JS -->
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
 
-        <script>
-            // Flutterwave payment implementation
-            document.addEventListener('livewire:initialized', function() {
-                // Listen for Flutterwave payment ready event
-                @this.on('flutterwave-payment-ready', function(paymentData) {
-                    console.log('Flutterwave payment data received:', paymentData);
+    <script>
+        // Simple Flutterwave implementation
+        function makeFlutterwavePayment() {
+            console.log('makeFlutterwavePayment function called');
 
-                    // Extract the payment data (it might be wrapped in an array)
-                    const data = Array.isArray(paymentData) ? paymentData[0] : paymentData;
+            // Get the current user's information
+            const userName = "{{ Auth::user()->name }}";
+            const userEmail = "{{ Auth::user()->email }}";
+            const phoneNumber = "{{ $billingPhone ?: '0000000000' }}";
+            const amount = {{ $totalPrice }};
+            const txRef = "txref-" + Date.now();
+            const selectedDate = "{{ $selectedDate }}";
 
-                    // Add click event listener to the payment button
-                    const payButton = document.getElementById('flutterwave-pay-button');
-                    if (payButton) {
-                        // Remove any existing event listeners
-                        payButton.replaceWith(payButton.cloneNode(true));
+            // Show processing message
+            document.getElementById('flutterwave-message').textContent = 'Initializing payment...';
+            document.getElementById('flutterwave-message').classList.add('text-blue-500');
+            document.getElementById('flutterwave-message').classList.remove('text-red-500');
 
-                        // Get the fresh button reference
-                        const freshButton = document.getElementById('flutterwave-pay-button');
+            // Store the tickets in a JSON string to pass in the URL
+            const selectedTickets = @json($selectedTickets);
 
-                        // Add the event listener
-                        freshButton.addEventListener('click', function() {
-                            makeFlutterwavePayment(data);
-                        });
+            FlutterwaveCheckout({
+                public_key: "{{ config('flutterwave.public_key') }}",
+                tx_ref: txRef,
+                amount: amount,
+                currency: "{{ $event->currency ?: 'UGX' }}",
+                payment_options: "card, mobilemoneyuganda",
+                meta: {
+                    event_id: "{{ $eventId }}",
+                    user_id: "{{ Auth::id() }}",
+                    selected_date: selectedDate,
+                    tickets: JSON.stringify(selectedTickets)
+                },
+                customer: {
+                    email: userEmail,
+                    phone_number: phoneNumber,
+                    name: userName,
+                },
+                customizations: {
+                    title: "{{ $event->name }}",
+                    description: "Payment for event tickets",
+                    logo: "{{ $event->organisation->logo_url ?? asset('images/logo.png') }}",
+                },
+                callback: function(data) {
+                    console.log("payment callback:", data);
+                    document.getElementById('flutterwave-message').textContent =
+                        'Payment completed. Processing...';
+                    document.getElementById('flutterwave-message').classList.remove('text-blue-500');
+                    document.getElementById('flutterwave-message').classList.add('text-green-500');
 
-                        // Trigger the payment immediately for testing
-                        console.log('Automatically triggering Flutterwave payment');
-                        setTimeout(() => {
-                            freshButton.click();
-                        }, 500);
-                    }
-                });
+                    // Encode the selected tickets as a JSON string
+                    const ticketsJson = JSON.stringify(selectedTickets);
 
-                // Listen for Flutterwave configuration error
-                @this.on('flutterwave-configuration-error', function(data) {
-                    console.error('Flutterwave configuration error:', data.message);
-                    const messageContainer = document.getElementById('flutterwave-message');
-                    if (messageContainer) {
-                        messageContainer.textContent = data.message ||
-                            'Error setting up payment system. Please try again later.';
-                        messageContainer.classList.remove('hidden');
-                        messageContainer.classList.add('text-red-500');
-                    }
-                });
-
-                // Function to make Flutterwave payment
-                function makeFlutterwavePayment(paymentData) {
-                    try {
-                        console.log('Initializing Flutterwave payment with data:', paymentData);
-
-                        // Validate payment data
-                        if (!paymentData || !paymentData.public_key || !paymentData.tx_ref) {
-                            throw new Error('Invalid payment data');
-                        }
-
-                        // Show a message that we're initializing payment
-                        const messageContainer = document.getElementById('flutterwave-message');
-                        if (messageContainer) {
-                            messageContainer.textContent = 'Initializing payment...';
-                            messageContainer.classList.remove('hidden');
-                            messageContainer.classList.add('text-blue-500');
-                            messageContainer.classList.remove('text-red-500');
-                        }
-
-                        // Initialize Flutterwave checkout
-                        FlutterwaveCheckout({
-                            public_key: paymentData.public_key,
-                            tx_ref: paymentData.tx_ref,
-                            amount: paymentData.amount,
-                            currency: paymentData.currency,
-                            payment_options: paymentData.payment_options,
-                            redirect_url: paymentData.redirect_url,
-                            meta: paymentData.meta,
-                            customer: paymentData.customer,
-                            customizations: paymentData.customizations,
-                            callback: function(response) {
-                                console.log('Flutterwave payment response:', response);
-                                // The callback is just for information, actual processing happens on the redirect
-
-                                // Show success message
-                                if (messageContainer) {
-                                    messageContainer.textContent = 'Payment processing...';
-                                    messageContainer.classList.remove('text-red-500');
-                                    messageContainer.classList.add('text-green-500');
-                                }
-                            },
-                            onclose: function() {
-                                console.log('Flutterwave payment modal closed');
-
-                                // Show closed message
-                                if (messageContainer) {
-                                    messageContainer.textContent = 'Payment cancelled. You can try again.';
-                                    messageContainer.classList.remove('text-blue-500');
-                                    messageContainer.classList.add('text-yellow-500');
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Error initializing Flutterwave payment:', error);
-                        const messageContainer = document.getElementById('flutterwave-message');
-                        if (messageContainer) {
-                            messageContainer.textContent = 'Error initializing payment: ' + error.message;
-                            messageContainer.classList.remove('hidden');
-                            messageContainer.classList.add('text-red-500');
-                        }
-                    }
-                }
-
-                // Check if we have Flutterwave payment success in session
-                if (@json(session()->has('flutterwave_payment_success'))) {
-                    console.log('Flutterwave payment success detected in session');
-                    const txRef = @json(session()->get('flutterwave_tx_ref'));
-                    const flwRef = @json(session()->get('flutterwave_flw_ref'));
-
-                    if (txRef && flwRef) {
-                        // Call the Livewire method to handle the callback
-                        @this.call('handleFlutterwaveCallback', 'successful', txRef, flwRef);
-                    }
+                    // Redirect to the callback URL with all necessary parameters
+                    window.location.href = "{{ route('payment.flutterwave.callback') }}?tx_ref=" +
+                        txRef + "&transaction_id=" + data.transaction_id +
+                        "&status=" + data.status + "&event_id={{ $eventId }}" +
+                        "&user_id={{ Auth::id() }}" + "&amount=" + amount +
+                        "&selected_date=" + encodeURIComponent(selectedDate) +
+                        "&tickets=" + encodeURIComponent(ticketsJson);
+                },
+                onclose: function() {
+                    console.log("Payment cancelled!");
+                    document.getElementById('flutterwave-message').textContent =
+                        'Payment cancelled. You can try again.';
+                    document.getElementById('flutterwave-message').classList.remove('text-blue-500');
+                    document.getElementById('flutterwave-message').classList.remove('text-green-500');
+                    document.getElementById('flutterwave-message').classList.add('text-yellow-500');
                 }
             });
-        </script>
-    @endif
+        }
+    </script>
+
+
 
     @if (config('cashier.key'))
         <script>
@@ -714,6 +647,88 @@
 
                     // Continue with normal initialization if no redirect
                     console.log('No completed booking found, continuing with initialization');
+                });
+
+                // Listen for Flutterwave payment ready event
+                @this.on('flutterwave-payment-ready', function(paymentData) {
+                    console.log('Flutterwave payment data received:', paymentData);
+
+                    // Check if we have the payment data
+                    if (!paymentData || !paymentData.public_key || !paymentData.tx_ref) {
+                        console.error('Invalid Flutterwave payment data received');
+                        return;
+                    }
+
+                    // Store the transaction reference in a global variable
+                    window.flutterwaveTxRef = paymentData.tx_ref;
+
+                    // Trigger the payment automatically
+                    setTimeout(() => {
+                        try {
+                            // Initialize Flutterwave checkout
+                            FlutterwaveCheckout({
+                                public_key: paymentData.public_key,
+                                tx_ref: paymentData.tx_ref,
+                                amount: paymentData.amount,
+                                currency: paymentData.currency,
+                                payment_options: paymentData.payment_options,
+                                redirect_url: paymentData.redirect_url,
+                                meta: paymentData.meta,
+                                customer: paymentData.customer,
+                                customizations: paymentData.customizations,
+                                callback: function(response) {
+                                    console.log('Flutterwave payment response:', response);
+
+                                    // Show success message
+                                    const messageContainer = document.getElementById(
+                                        'flutterwave-message');
+                                    if (messageContainer) {
+                                        messageContainer.textContent =
+                                            'Payment successful! Processing your booking...';
+                                        messageContainer.classList.remove('text-red-500');
+                                        messageContainer.classList.add('text-green-500');
+                                    }
+
+                                    // Add selected_date to the redirect URL
+                                    const selectedDate = paymentData.meta.selected_date ||
+                                        "{{ $selectedDate }}";
+
+                                    // Redirect to the callback URL with all necessary parameters
+                                    window.location.href = paymentData.redirect_url +
+                                        "?tx_ref=" +
+                                        paymentData.tx_ref + "&transaction_id=" + response
+                                        .transaction_id +
+                                        "&status=" + response.status + "&event_id=" +
+                                        paymentData.meta.event_id +
+                                        "&user_id=" + paymentData.meta.user_id +
+                                        "&amount=" + paymentData.amount +
+                                        "&selected_date=" + encodeURIComponent(
+                                            selectedDate);
+                                },
+                                onclose: function() {
+                                    console.log('Flutterwave payment modal closed');
+
+                                    // Show closed message
+                                    const messageContainer = document.getElementById(
+                                        'flutterwave-message');
+                                    if (messageContainer) {
+                                        messageContainer.textContent =
+                                            'Payment cancelled. You can try again.';
+                                        messageContainer.classList.remove('text-blue-500');
+                                        messageContainer.classList.add('text-yellow-500');
+                                    }
+                                }
+                            });
+                        } catch (error) {
+                            console.error('Error initializing Flutterwave payment:', error);
+                            const messageContainer = document.getElementById('flutterwave-message');
+                            if (messageContainer) {
+                                messageContainer.textContent = 'Error initializing payment: ' + error
+                                    .message;
+                                messageContainer.classList.add('text-red-500');
+                            }
+                        }
+                    }, 500);
                 });
 
                 // Initialize Stripe

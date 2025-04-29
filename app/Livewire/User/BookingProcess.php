@@ -636,6 +636,8 @@ class BookingProcess extends Component
                     'event_id' => $this->eventId,
                     'user_id' => Auth::id(),
                     'tickets' => $this->selectedTickets,
+                    'attendees' => $this->attendees,
+                    'selected_date' => $this->selectedDate,
                 ]
             ]);
 
@@ -660,11 +662,14 @@ class BookingProcess extends Component
                 'meta' => [
                     'event_id' => $this->eventId,
                     'user_id' => Auth::id(),
+                    'attendees' => json_encode($this->attendees),
+                    'selected_date' => $this->selectedDate,
                 ]
             ];
 
-            // Store transaction ID in session for callback verification
+            // Store transaction ID and attendees in session for callback verification
             session()->put('flutterwave_tx_ref', $txRef);
+            session()->put('booking_attendees', $this->attendees);
 
             // Dispatch event to initialize Flutterwave payment on the frontend
             // Pass the payment data directly, not as an array

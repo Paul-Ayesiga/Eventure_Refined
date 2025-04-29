@@ -39,7 +39,7 @@ return [
     |
     */
 
-    'currency' => env('FLUTTERWAVE_CURRENCY', 'RWF'),
+    'currency' => env('FLUTTERWAVE_CURRENCY', 'UGX'),
     'display_currency' => env('FLUTTERWAVE_DISPLAY_CURRENCY', 'UGX'),
 
     /*
