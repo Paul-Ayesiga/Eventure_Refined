@@ -40,7 +40,7 @@
                             <flux:dropdown position="bottom" align="end">
                                 <flux:profile :name="auth()->user()->name"
                                     :avatar="auth()->user()->userDetail ?->profile_image ? Storage::url(auth()->
-                                    user()->userDetail->profile_image) : null"
+                                        user()->userDetail->profile_image) : null"
                                     :initials="auth()->user()->initials()" />
 
                                 <flux:navmenu>
@@ -273,6 +273,10 @@
         @fluxScripts
         <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+        <!-- AI Assistant Component -->
+        @if (isset($showAssistant) && $showAssistant)
+            <livewire:assistant.chat-assistant />
+        @endif
 
         <script>
             // Listen for toast events and redirects

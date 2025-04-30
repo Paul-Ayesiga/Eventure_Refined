@@ -52,41 +52,42 @@
             </flux:navlist.item>
             <flux:navlist.group :heading="__('Platform')" class="grid">
                 <flux:navlist.item icon="layout-dashboard"
-                    :href="route('organisation-dashboard', ['organisationId' => request()->route('organisationId')])"
-                    :current="request()->routeIs('organisation-dashboard')" wire:navigate.hover>{{ __('Dashboard') }}
+                    :href="route('organisation-dashboard', ['organisationId' => request() - > route('organisationId')])"
+                    :current="request() - > routeIs('organisation-dashboard')" wire:navigate.hover>{{ __('Dashboard') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="calendar-1"
-                    :href="route('events', ['organisationId' => request()->route('organisationId')])"
-                    :current="request()->routeIs('events')" wire:navigate.hover>{{ __('Events') }}</flux:navlist.item>
+                    :href="route('events', ['organisationId' => request() - > route('organisationId')])"
+                    :current="request() - > routeIs('events')" wire:navigate.hover>{{ __('Events') }}
+                </flux:navlist.item>
                 <flux:navlist.item icon="clipboard-copy" :href="route('reports')"
-                    :current="request()->routeIs('reports')" wire:navigate.hover>{{ __('Reports') }}
+                    :current="request() - > routeIs('reports')" wire:navigate.hover>{{ __('Reports') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="user-group" :href="route('my-team')"
-                    :current="request()->routeIs('my-team')" wire:navigate.hover>{{ __('My Team') }}
+                    :current="request() - > routeIs('my-team')" wire:navigate.hover>{{ __('My Team') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="smartphone-nfc" :href="route('contacts')"
-                    :current="request()->routeIs('contacts')" wire:navigate.hover>{{ __('Contacts') }}
+                    :current="request() - > routeIs('contacts')" wire:navigate.hover>{{ __('Contacts') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="layers" :href="route('organisation-profile')"
-                    :current="request()->routeIs('organisation-profile')" wire:navigate.hover>
+                    :current="request() - > routeIs('organisation-profile')" wire:navigate.hover>
                     {{ __('Organisation Profile') }}</flux:navlist.item>
-                <flux:navlist.item icon="ticket" :href="route('coupons')" :current="request()->routeIs('coupons')"
+                <flux:navlist.item icon="ticket" :href="route('coupons')" :current="request() - > routeIs('coupons')"
                     wire:navigate.hover>{{ __('Coupons') }}</flux:navlist.item>
                 <flux:navlist.item icon="scan-barcode" :href="route('tracking-codes')"
-                    :current="request()->routeIs('tracking-codes')" wire:navigate.hover>{{ __('Tracking Codes') }}
+                    :current="request() - > routeIs('tracking-codes')" wire:navigate.hover>{{ __('Tracking Codes') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="banknotes" :href="route('payment-collections')"
-                    :current="request()->routeIs('payment-collections')" wire:navigate.hover>
+                    :current="request() - > routeIs('payment-collections')" wire:navigate.hover>
                     {{ __('Payment Collections') }}</flux:navlist.item>
                 <flux:navlist.item icon="credit-card" :href="route('billing-details')"
-                    :current="request()->routeIs('billing-details')" wire:navigate.hover>
+                    :current="request() - > routeIs('billing-details')" wire:navigate.hover>
                     {{ __('Billing Details') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="gem" :href="route('subscription')"
-                    :current="request()->routeIs('subscription')" wire:navigate.hover>{{ __('Subscription') }}
+                    :current="request() - > routeIs('subscription')" wire:navigate.hover>{{ __('Subscription') }}
                 </flux:navlist.item>
                 <flux:navlist.item icon="shopping-cart" :href="route('merchandise')"
-                    :current="request()->routeIs('merchandise')" wire:navigate.hover badge="Pro"
+                    :current="request() - > routeIs('merchandise')" wire:navigate.hover badge="Pro"
                     badge-color="lime">
                     {{ __('Merchandise') }}</flux:navlist.item>
 
@@ -136,13 +137,12 @@
         <!-- Desktop User Menu -->
         @php
             $currentOrganisation = getCurrentOrganisation();
-             $logo = $currentOrganisation->logo_url;
-             $inits = $currentOrganisation->initials();
+            $logo = $currentOrganisation->logo_url;
+            $inits = $currentOrganisation->initials();
         @endphp
 
         <flux:dropdown position="bottom" align="start">
-            <flux:profile :name="$currentOrganisation->name" class="object-fit"
-                :avatar="Storage::url($logo)"
+            <flux:profile :name="$currentOrganisation - > name" class="object-fit" :avatar="Storage::url($logo)"
                 :initials="$inits" icon-trailing="chevrons-up-down" />
 
             <flux:menu class="w-[220px]">
@@ -168,7 +168,9 @@
                 <flux:menu.separator />
 
                 <flux:menu.radio.group>
-                    <flux:menu.item :href="route('org.settings.profile',['organisationId' => request()->route('organisationId')])" icon="cog" wire:navigate>
+                    <flux:menu.item
+                        :href="route('org.settings.profile', ['organisationId' => request() - > route('organisationId')])"
+                        icon="cog" wire:navigate>
                         {{ __('Settings') }}
                     </flux:menu.item>
                 </flux:menu.radio.group>
@@ -192,9 +194,8 @@
         <flux:spacer />
 
         <flux:dropdown position="top" align="end" on="profile-updated">
-            <flux:profile :name="$inits"
-                :avatar=" Storage::url($logo)"
-                :initials="$inits" icon-trailing="chevrons-up-down" />
+            <flux:profile :name="$inits" :avatar="Storage::url($logo)" :initials="$inits"
+                icon-trailing="chevrons-up-down" />
 
             <flux:menu>
                 <flux:menu.radio.group>
@@ -219,7 +220,9 @@
                 <flux:menu.separator />
 
                 <flux:menu.radio.group>
-                    <flux:menu.item :href="route('org.settings.profile',['organisationId' => request()->route('organisationId')])" icon="cog" wire:navigate>
+                    <flux:menu.item
+                        :href="route('org.settings.profile', ['organisationId' => request() - > route('organisationId')])"
+                        icon="cog" wire:navigate>
                         {{ __('Settings') }}</flux:menu.item>
                 </flux:menu.radio.group>
 
@@ -240,6 +243,11 @@
     @fluxScripts
     @livewire('toaster')
     @stack('scripts')
+
+    <!-- AI Assistant Component -->
+    @if (isset($showAssistant) && $showAssistant)
+        <livewire:assistant.chat-assistant />
+    @endif
 
 </body>
 

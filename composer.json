@@ -18,6 +18,7 @@
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
         "predis/predis": "^2.3",
+        "prism-php/prism": "^0.65.2",
         "robsontenorio/mary": "^2.2",
         "safaricom/mpesa": "^1.0",
         "simplesoftwareio/simple-qrcode": "^4.2",
