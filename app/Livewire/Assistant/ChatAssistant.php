@@ -3,12 +3,9 @@
 namespace App\Livewire\Assistant;
 
 use Livewire\Component;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Prism\Prism\Prism;
-use Prism\Prism\Enums\Provider;
-use Prism\Prism\ValueObjects\Messages\UserMessage;
-use Prism\Prism\ValueObjects\Messages\AssistantMessage;
+use App\Agents\EventureAssistant;
+use NeuronAI\Chat\Messages\UserMessage;
 
 class ChatAssistant extends Component
 {
@@ -157,56 +154,110 @@ class ChatAssistant extends Component
 
     protected function getMistralResponse($userMessage, $conversationHistory)
     {
-        // Get the system prompt
-        $systemPrompt = view('prompts.assistant-system')->render();
-
         try {
-            // Try with mistral-small-latest first
-            // Instead of using withMessages(), let's use withPrompt() for the current message
-            // and include the conversation history in the system prompt
+            // Get the Neuron AI agent from the container
+            $agent = app(EventureAssistant::class);
 
-            // Format previous conversation for context
-            $conversationContext = '';
-            if (!empty($conversationHistory)) {
-                foreach ($conversationHistory as $message) {
-                    $role = ucfirst($message['role']);
-                    $conversationContext .= "{$role}: {$message['content']}\n\n";
+            // Convert conversation history to Neuron AI message format
+            $messages = [];
+
+            // Add previous messages from conversation history
+            foreach ($conversationHistory as $message) {
+                if ($message['role'] === 'user') {
+                    $messages[] = new UserMessage($message['content']);
+                } else {
+                    $messages[] = new \NeuronAI\Chat\Messages\AssistantMessage($message['content']);
                 }
             }
 
-            // Combine system prompt with conversation context
-            $fullSystemPrompt = $systemPrompt;
-            if (!empty($conversationContext)) {
-                $fullSystemPrompt .= "\n\nPrevious conversation:\n" . $conversationContext;
+            // Add the current user message
+            $messages[] = new UserMessage($userMessage);
+
+            // Get response from Neuron AI
+            $response = $agent->chat($messages);
+            $content = $response->getContent();
+
+            // Check if the response is a tool call (JSON array)
+            if (substr($content, 0, 1) === '[' && substr($content, -1) === ']') {
+                try {
+                    $toolCalls = json_decode($content, true);
+
+                    // If it's a valid JSON array and contains tool calls
+                    if (is_array($toolCalls) && !empty($toolCalls)) {
+                        Log::info('Tool call detected', ['tool_calls' => $toolCalls]);
+
+                        // Process each tool call
+                        $results = [];
+                        foreach ($toolCalls as $toolCall) {
+                            if (isset($toolCall['name']) && isset($toolCall['arguments'])) {
+                                $toolName = $toolCall['name'];
+                                $arguments = $toolCall['arguments'];
+
+                                Log::info("Executing tool: {$toolName}", ['arguments' => $arguments]);
+
+                                // Execute the appropriate tool based on the name
+                                switch ($toolName) {
+                                    case 'search_events':
+                                        $tool = new \App\Tools\EventSearchTool();
+                                        $query = $arguments['query'] ?? '';
+                                        $category = $arguments['category'] ?? null;
+                                        $date = $arguments['date'] ?? null;
+                                        $results[] = $tool($query, $category, $date);
+                                        break;
+
+                                    case 'get_event_details':
+                                        $tool = new \App\Tools\EventDetailsTool();
+                                        $eventId = $arguments['event_id'] ?? '';
+                                        $results[] = $tool($eventId);
+                                        break;
+
+                                    case 'get_booking_info':
+                                        $tool = new \App\Tools\BookingInfoTool();
+                                        $reference = $arguments['reference'] ?? null;
+                                        $results[] = $tool($reference);
+                                        break;
+
+                                    default:
+                                        $results[] = "Unknown tool: {$toolName}";
+                                        break;
+                                }
+                            }
+                        }
+
+                        // If we have results from tools, use them
+                        if (!empty($results)) {
+                            // Join the results with a separator
+                            $toolResults = implode("\n\n", $results);
+
+                            // Get a final response from the AI using the tool results
+                            $finalPrompt = "I used the tools you requested and found the following information:\n\n{$toolResults}\n\nPlease provide a helpful response based on this information.";
+                            $finalResponse = $agent->chat(new UserMessage($finalPrompt));
+                            return $finalResponse->getContent();
+                        }
+                    }
+                } catch (\Exception $jsonError) {
+                    Log::error('Error processing tool call JSON', [
+                        'error' => $jsonError->getMessage(),
+                        'content' => $content
+                    ]);
+                }
             }
 
-            // Make the API call
-            $response = Prism::text()
-                ->using(Provider::Mistral, 'mistral-small-latest')
-                ->withSystemPrompt($fullSystemPrompt)
-                ->withPrompt($userMessage)
-                ->asText();
-
-
-
-            return $response->text;
+            // If not a tool call or tool execution failed, return the original content
+            return $content;
         } catch (\Exception $e) {
-            // Log the error
-            Log::error('Mistral error: ' . $e->getMessage());
+            // Log the error with more details
+            Log::error('Neuron AI error: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
 
-            // No need to debug in production
-
-            // Try a different approach as fallback
+            // Try a simpler approach as fallback
             try {
-                $response = Prism::text()
-                    ->using(Provider::Mistral, 'mistral-small-latest')
-                    ->withSystemPrompt($systemPrompt)
-                    ->withPrompt($userMessage)
-                    ->asText();
-
-                return $response->text;
+                $agent = app(EventureAssistant::class);
+                $response = $agent->chat(new UserMessage($userMessage));
+                return $response->getContent();
             } catch (\Exception $e2) {
                 Log::error('Fallback error: ' . $e2->getMessage());
+                Log::error('Fallback trace: ' . $e2->getTraceAsString());
                 return "I'm sorry, I'm having trouble connecting to my brain right now. Please try again in a moment.";
             }
         }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use App\Livewire\Assistant\ChatAssistant;
+use App\Livewire\Assistant\CustomChatAssistant;
 
 class AssistantServiceProvider extends ServiceProvider
 {
@@ -22,7 +23,8 @@ class AssistantServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register Livewire components
-        Livewire::component('assistant.chat-assistant', ChatAssistant::class);
+        // Livewire::component('assistant.chat-assistant', ChatAssistant::class); // Original component
+        Livewire::component('assistant.chat-assistant', CustomChatAssistant::class); // Custom implementation
 
         // Share the assistant components with all views
         view()->composer('*', function ($view) {
