@@ -279,6 +279,8 @@ Focus on explaining the purpose of the models and their relationships in a way t
 
                                     case 'dynamic_query':
                                         $finalPrompt = "Based on the user's question: \"{$userMessage}\", I found the following information:\n\n{$toolResult}\n\n
+IMPORTANT: Only respond with information about events that actually exist in the database. If the result says 'I couldn't find any events matching your criteria', do NOT make up events - simply tell the user that no matching events were found.
+
 Please provide a helpful, conversational response based on this information. {$promptInstructions}
 Keep your response natural and engaging. The information is already formatted in a user-friendly way, so you can focus on adding context and being helpful.";
                                         break;

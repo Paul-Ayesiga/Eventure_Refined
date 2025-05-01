@@ -120,7 +120,10 @@ class TestNeuronAIToolExecution extends Command
 
                                         // Now send the result back to the AI
                                         $this->info("Sending tool result back to AI...");
-                                        $finalPrompt = "I used the dynamic_query tool and found the following information:\n\n{$result}\n\nPlease provide a helpful response based on this information.";
+                                        $finalPrompt = "I used the dynamic_query tool and found the following information:\n\n{$result}\n\n
+IMPORTANT: Only respond with information about events that actually exist in the database. If the result says 'I couldn't find any events matching your criteria', do NOT make up events - simply tell the user that no matching events were found.
+
+Please provide a helpful response based on this information.";
                                         $finalResponse = $agent->chat(new UserMessage($finalPrompt));
                                         $this->info("Final AI response:");
                                         $this->line($finalResponse->getContent());

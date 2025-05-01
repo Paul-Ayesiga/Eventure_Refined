@@ -131,15 +131,29 @@ class DynamicQueryTool
             // Convert question to lowercase for easier matching
             $lowerQuestion = strtolower($question);
 
-            // Determine the type of query
+            // Determine the type of query and extract search terms
             $queryType = 'list'; // Default
+            $searchTerm = '';
+            $category = '';
 
-            if (Str::contains($lowerQuestion, ['find events', 'search events', 'events about', 'events related to'])) {
+            // Check for category-specific queries
+            if (preg_match('/\b(music|concert|festival|sports|business|conference|workshop|seminar|art|exhibition|charity|fundraising|networking|social|community|educational|training|virtual|online)\b/i', $question, $matches)) {
+                $queryType = 'category';
+                $category = $matches[1];
+                Log::info("DynamicQueryTool - Category detected", ['category' => $category]);
+            }
+            // Check for search queries
+            elseif (Str::contains($lowerQuestion, ['find', 'search', 'any', 'are there', 'show me', 'looking for', 'about', 'related to'])) {
                 $queryType = 'search';
                 $searchTerm = $this->extractSearchTerm($question);
-            } elseif (Str::contains($lowerQuestion, ['upcoming events', 'future events', 'events soon', 'coming events'])) {
+                Log::info("DynamicQueryTool - Search term detected", ['searchTerm' => $searchTerm]);
+            }
+            // Check for upcoming events
+            elseif (Str::contains($lowerQuestion, ['upcoming', 'future', 'soon', 'coming', 'next'])) {
                 $queryType = 'upcoming';
-            } elseif (Str::contains($lowerQuestion, ['event details', 'about event', 'tell me about event'])) {
+            }
+            // Check for event details
+            elseif (Str::contains($lowerQuestion, ['details', 'about event', 'tell me about', 'more info', 'information on'])) {
                 $queryType = 'details';
                 $eventName = $this->extractEventName($question);
             }
@@ -150,6 +164,13 @@ class DynamicQueryTool
             switch ($queryType) {
                 case 'search':
                     if (!empty($searchTerm)) {
+                        // Log the search term for debugging
+                        Log::info("DynamicQueryTool - Searching with term", ['searchTerm' => $searchTerm]);
+
+                        // Get the total count of events in the database
+                        $totalEvents = Event::count();
+                        Log::info("DynamicQueryTool - Total events in database", ['count' => $totalEvents]);
+
                         $events = Event::where(function($q) use ($searchTerm) {
                                 $q->where('name', 'like', "%{$searchTerm}%")
                                   ->orWhere('description', 'like', "%{$searchTerm}%")
@@ -162,8 +183,17 @@ class DynamicQueryTool
                             })
                             ->orderBy('start_date', 'asc')
                             ->limit(10)
-                            ->get()
-                            ->toArray();
+                            ->get();
+
+                        // Log the search results
+                        Log::info("DynamicQueryTool - Search results", ['count' => $events->count()]);
+
+                        // If no events found, return a clear message
+                        if ($events->count() === 0) {
+                            return "I couldn't find any events matching your criteria. Please try a different search term or category.";
+                        }
+
+                        $events = $events->toArray();
                     } else {
                         // If no search term, fall back to listing all events
                         $events = Event::where('status', 'Published')
@@ -188,8 +218,17 @@ class DynamicQueryTool
                         })
                         ->orderBy('start_date', 'asc')
                         ->limit(10)
-                        ->get()
-                        ->toArray();
+                        ->get();
+
+                    // Log the upcoming events results
+                    Log::info("DynamicQueryTool - Upcoming events results", ['count' => $events->count()]);
+
+                    // If no events found, return a clear message
+                    if ($events->count() === 0) {
+                        return "I couldn't find any upcoming events. Please check back later as our event calendar is updated regularly.";
+                    }
+
+                    $events = $events->toArray();
                     break;
 
                 case 'details':
@@ -201,8 +240,17 @@ class DynamicQueryTool
                                   ->orWhereNull('is_archived');
                             })
                             ->limit(1)
-                            ->get()
-                            ->toArray();
+                            ->get();
+
+                        // Log the event details results
+                        Log::info("DynamicQueryTool - Event details results", ['count' => $events->count(), 'eventName' => $eventName]);
+
+                        // If no events found, return a clear message
+                        if ($events->count() === 0) {
+                            return "I couldn't find any event matching '{$eventName}'. Please check the event name and try again.";
+                        }
+
+                        $events = $events->toArray();
                     } else {
                         // If no event name, fall back to listing all events
                         $events = Event::where('status', 'Published')
@@ -212,8 +260,17 @@ class DynamicQueryTool
                             })
                             ->orderBy('start_date', 'asc')
                             ->limit(10)
-                            ->get()
-                            ->toArray();
+                            ->get();
+
+                        // Log the fallback results
+                        Log::info("DynamicQueryTool - Fallback results (no event name)", ['count' => $events->count()]);
+
+                        // If no events found, return a clear message
+                        if ($events->count() === 0) {
+                            return "I couldn't find any events in the database. Please check back later as our event calendar is updated regularly.";
+                        }
+
+                        $events = $events->toArray();
                     }
                     break;
 
@@ -226,8 +283,17 @@ class DynamicQueryTool
                         })
                         ->orderBy('start_date', 'asc')
                         ->limit(10)
-                        ->get()
-                        ->toArray();
+                        ->get();
+
+                    // Log the list results
+                    Log::info("DynamicQueryTool - List results", ['count' => $events->count()]);
+
+                    // If no events found, return a clear message
+                    if ($events->count() === 0) {
+                        return "I couldn't find any events in the database. Please check back later as our event calendar is updated regularly.";
+                    }
+
+                    $events = $events->toArray();
                     break;
             }
 
@@ -483,6 +549,15 @@ class DynamicQueryTool
     {
         $lowerQuestion = strtolower($question);
 
+        // Check for specific categories in the question
+        $categories = ['music', 'concert', 'festival', 'sports', 'business', 'conference', 'workshop', 'seminar', 'art', 'exhibition', 'charity', 'fundraising', 'networking', 'social', 'community', 'educational', 'training', 'virtual', 'online'];
+
+        foreach ($categories as $category) {
+            if (strpos($lowerQuestion, $category) !== false) {
+                return $category;
+            }
+        }
+
         // Try to extract search term after "about", "related to", etc.
         $patterns = [
             '/find events about (.+)/i',
@@ -490,6 +565,10 @@ class DynamicQueryTool
             '/events related to (.+)/i',
             '/find (.+) events/i',
             '/search for (.+) events/i',
+            '/any (.+) events/i',
+            '/show me (.+) events/i',
+            '/are there (.+) events/i',
+            '/looking for (.+) events/i',
         ];
 
         foreach ($patterns as $pattern) {
@@ -563,7 +642,7 @@ class DynamicQueryTool
 
             if (empty($data)) {
                 Log::info("DynamicQueryTool formatResults - Empty data after JSON decode");
-                return "I couldn't find any events matching your criteria.";
+                return "I couldn't find any events matching your criteria. Please try a different search term or category.";
             }
 
             // Determine the type of question to format the results appropriately
@@ -614,7 +693,7 @@ class DynamicQueryTool
     private function formatEventListing(array $events)
     {
         if (empty($events)) {
-            return "I couldn't find any events matching your criteria.";
+            return "I couldn't find any events matching your criteria. Please try a different search term or category.";
         }
 
         $result = "Here are the events I found:\n\n";
