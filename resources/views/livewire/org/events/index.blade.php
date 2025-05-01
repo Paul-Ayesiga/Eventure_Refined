@@ -455,23 +455,16 @@ new class extends Component {
     @endif
 
     <!-- Events list -->
-    <div class="relative">
-        <!-- Loading Overlay -->
-        <div wire:loading wire:target="eventTypeSelected, search, refresh"
-            class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-                <rect fill="#FF156D" stroke="#FF156D" stroke-width="15" stroke-linejoin="round" width="30"
-                    height="30" x="85" y="85" rx="0" ry="0">
-                    <animate attributeName="rx" calcMode="spline" dur="2" values="15;15;5;15;15"
-                        keySplines=".5 0 .5 1;.8 0 1 .2;0 .8 .2 1;.5 0 .5 1" repeatCount="indefinite"></animate>
-                    <animate attributeName="ry" calcMode="spline" dur="2" values="15;15;10;15;15"
-                        keySplines=".5 0 .5 1;.8 0 1 .2;0 .8 .2 1;.5 0 .5 1" repeatCount="indefinite"></animate>
-                    <animate attributeName="height" calcMode="spline" dur="2" values="30;30;1;30;30"
-                        keySplines=".5 0 .5 1;.8 0 1 .2;0 .8 .2 1;.5 0 .5 1" repeatCount="indefinite"></animate>
-                    <animate attributeName="y" calcMode="spline" dur="2" values="40;170;40;"
-                        keySplines=".6 0 1 .4;0 .8 .2 1" repeatCount="indefinite"></animate>
-                </rect>
-            </svg>
+    <div class="relative bg-blend-overlay">
+        <!-- Ambient lighting loader with sliding effect -->
+        <div wire:loading wire:target="eventTypeSelected"
+            class="absolute top-0 left-0 right-0 h-1 z-50 overflow-hidden">
+            <div class="h-full w-[200%] bg-gradient-to-r from-transparent via-blue-500 to-pink-500 animate-slide-rtl">
+            </div>
+        </div>
+        <!-- Ambient glow effect that follows the sliding light -->
+        <div wire:loading wire:target="eventTypeSelected"
+            class="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-purple-500/20 to-transparent z-10 animate-pulse">
         </div>
         @forelse ($events as $event)
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow duration-300 cursor-pointer mb-4"
@@ -678,12 +671,27 @@ new class extends Component {
 
 @push('scripts')
     <script>
+        // Add custom animation for the sliding effect
+        document.addEventListener('DOMContentLoaded', function() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slide-rtl {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-slide-rtl {
+                    animation: slide-rtl 2s linear infinite;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
         function venueSearch() {
             return {
                 query: '',
                 suggestions: [],
                 isLoading: false,
-                locationiqKey: 'pk.8da423155473007977a90bb555d54b41',
+                locationiqKey: '{{ \App\Helpers\LocationIQHelper::getJsApiKey() }}',
 
                 async fetchSuggestions() {
                     if (this.query.length < 3) {

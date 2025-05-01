@@ -113,7 +113,7 @@
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-6">
+                        <div class="flex flex-wrap gap-6">
                             <div>
                                 <p class="text-xs uppercase text-gray-500 font-medium">BOOKING REFERENCE</p>
                                 <p class="font-semibold text-accent">{{ $booking->booking_reference }}</p>

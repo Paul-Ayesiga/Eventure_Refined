@@ -141,8 +141,7 @@
                     :current="request()->routeIs('event-insights')" wire:navigate>
                     {{ __('Insights') }}
                 </flux:navlist.item>
-                <flux:navlist.item icon="cog-6-tooth" href="{{ route('event-settings', ['id' => $eventId]) }}"
-                    :current="request()->routeIs('event-settings')" wire:navigate>
+                <flux:navlist.item icon="cog-6-tooth" href="" wire:navigate>
                     {{ __('Settings') }}
                 </flux:navlist.item>
             </flux:navlist.group>

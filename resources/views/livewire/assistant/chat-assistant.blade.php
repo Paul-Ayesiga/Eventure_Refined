@@ -33,7 +33,7 @@
         x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100 transform translate-y-0"
         x-transition:leave-end="opacity-0 transform translate-y-4"
-        class="fixed bottom-24 right-6 z-50 w-full max-w-md sm:max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
+        class="fixed bottom-24 right-6 sm:right-0 z-50 w-fit max-w-md sm:max-w-lg bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden"
         style="max-height: 80vh; display: none;">
         <div class="flex flex-col h-[80vh] sm:h-[70vh]">
             <!-- Header -->

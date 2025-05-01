@@ -38,7 +38,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2 ml-3">
                 <flux:button wire:click="notifySelected" variant="primary"
                     :disabled="empty($selectedEntries) || $event->isArchived()" icon="bell"
                     :title="$event->isArchived() ? 'Cannot notify users for archived events' : null">

@@ -34,19 +34,19 @@
 <body>
     <h1>Flutterwave Test Page</h1>
     <p>This is a simple test page to verify if the Flutterwave integration works correctly.</p>
-    
+
     <button id="pay-button">Pay with Flutterwave</button>
-    
+
     <div id="message" class="message">Click the button to test Flutterwave payment</div>
-    
+
     <!-- Flutterwave JS -->
     <script src="https://checkout.flutterwave.com/v3.js"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const payButton = document.getElementById('pay-button');
             const messageDiv = document.getElementById('message');
-            
+
             // Check if Flutterwave is loaded
             if (typeof FlutterwaveCheckout !== 'function') {
                 messageDiv.textContent = 'ERROR: FlutterwaveCheckout is not defined. The Flutterwave script may not be loading correctly.';
@@ -54,24 +54,25 @@
                 console.error('FlutterwaveCheckout is not defined');
                 return;
             }
-            
+
             messageDiv.textContent = 'Flutterwave script loaded successfully. Click the button to test.';
-            
+
             payButton.addEventListener('click', function() {
                 messageDiv.textContent = 'Initializing payment...';
-                
+
                 try {
                     // Get your public key from the Flutterwave dashboard
-                    const publicKey = 'FLWPUBK_TEST-2038a642bb755db4e67ca96c7fc68f4b-X'; // Replace with your actual public key
+                    // This should be replaced with a server-side variable in a real implementation
+                    const publicKey = ''; // Use environment variable in production
                     const txRef = 'FLW-TEST-' + Date.now();
                     const amount = 1000; // 1000 UGX
-                    
+
                     console.log('Initializing Flutterwave with:', {
                         publicKey,
                         txRef,
                         amount
                     });
-                    
+
                     FlutterwaveCheckout({
                         public_key: publicKey,
                         tx_ref: txRef,
@@ -98,7 +99,7 @@
                             messageDiv.textContent = 'Payment modal closed. You can try again.';
                         }
                     });
-                    
+
                     console.log('FlutterwaveCheckout called successfully');
                 } catch (error) {
                     console.error('Error initializing Flutterwave payment:', error);

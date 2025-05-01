@@ -14,7 +14,7 @@
         </div>
     </div>
 
-    <div class="p-4 sm:p-6 lg:p-8">
+    <div class="p-2 sm:p-2 lg:p-8">
         <!-- Header Section -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
@@ -843,7 +843,7 @@
         window.initLocationIQ = function() {
             if (!window.locationiq) {
                 window.locationiq = {
-                    key: 'pk.8da423155473007977a90bb555d54b41',
+                    key: '{{ \App\Helpers\LocationIQHelper::getJsApiKey() }}',
                     getLayer: function(type) {
                         const styles = {
                             'Streets': 'https://tiles.locationiq.com/v3/streets/vector.json?key=' + this
@@ -920,7 +920,7 @@
 
                     try {
                         // Set LocationIQ key
-                        locationiq.key = 'pk.8da423155473007977a90bb555d54b41';
+                        locationiq.key = '{{ \App\Helpers\LocationIQHelper::getJsApiKey() }}';
 
                         map = new maplibregl.Map({
                             container: mapContainer,
@@ -1016,7 +1016,7 @@
                 query: '',
                 suggestions: [],
                 isLoading: false,
-                locationiqKey: 'pk.8da423155473007977a90bb555d54b41',
+                locationiqKey: '{{ \App\Helpers\LocationIQHelper::getJsApiKey() }}',
 
                 async fetchSuggestions() {
                     if (this.query.length < 3) {

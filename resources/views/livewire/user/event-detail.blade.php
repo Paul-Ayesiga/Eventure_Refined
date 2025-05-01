@@ -405,7 +405,7 @@
 
                     try {
                         // Set LocationIQ key
-                        locationiq.key = 'pk.8da423155473007977a90bb555d54b41';
+                        locationiq.key = '{{ \App\Helpers\LocationIQHelper::getJsApiKey() }}';
 
                         map = new maplibregl.Map({
                             container: 'map',

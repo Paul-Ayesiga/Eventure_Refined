@@ -45,7 +45,7 @@
                         </flux:button>
                     </div>
                 @endif
-                <div class="flex space-x-2">
+                <div class="flex space-x-2 ml-2">
                     <flux:button icon="arrow-down-tray" variant="outline" class="whitespace-nowrap">
                         <span class="hidden sm:inline">Export</span>
                     </flux:button>
@@ -589,7 +589,7 @@
     </flux:modal>
 
     <!-- Booking Details Modal -->
-    <flux:modal wire:model="isModalOpen" class="max-w-3xl" variant="flyout">
+    <flux:modal wire:model="isModalOpen" class="lg:max-w-3xl sm:max-w-md" variant="flyout">
         <div class="p-6">
             <div class="mb-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">
@@ -742,7 +742,7 @@
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-3">
+                <div class="mt-6 flex flex-wrap gap-2 justify-end space-x-3">
                     <flux:button type="button" wire:click="closeModal" variant="outline">
                         Close
                     </flux:button>

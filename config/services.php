@@ -44,4 +44,8 @@ return [
         'callback_url' => env('MPESA_CALLBACK_URL'),
     ],
 
+    'locationiq' => [
+        'api_key' => env('LOCATIONIQ_API_KEY'),
+    ],
+
 ];
