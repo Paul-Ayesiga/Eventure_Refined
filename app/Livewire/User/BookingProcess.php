@@ -575,6 +575,15 @@ class BookingProcess extends Component
         return view('livewire.user.booking-process', [
             'totalPrice' => $this->getTotalPrice(),
             'totalTickets' => $this->getTotalTickets(),
-        ])->layout('components.layouts.public');
+        ])->layout('components.layouts.page', [
+            'title' => 'Booking Process',
+            'description' => 'Complete your booking for the event.',
+            'keywords' => 'booking, events, tickets, payment'
+        ])->with('success', 'Booking process started successfully.')
+          ->with('error', 'Failed to start booking process. Please try again later.')
+          ->with('info', 'No tickets selected for booking.')
+          ->with('warning', 'Please adjust your selections to proceed.')
+          ->with('notice', 'Check back later for more events.')
+          ->with('alert', 'New events are added regularly!');
     }
 }

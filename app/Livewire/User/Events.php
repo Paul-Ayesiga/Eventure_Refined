@@ -193,7 +193,16 @@ class Events extends Component
         return view('livewire.user.events', [
             'events' => $events,
             'categoryOptions' => $categoryOptions
-        ])->layout('components.layouts.public');
+        ])->layout('components.layouts.page', [
+            'title' => 'Events',
+            'description' => 'Find and book events that interest you.',
+            'keywords' => 'events, booking, tickets, concerts, festivals'
+        ])->with('success', 'Events loaded successfully.')
+          ->with('error', 'Failed to load events. Please try again later.')
+          ->with('info', 'No events found for the selected filters.')
+          ->with('warning', 'Please adjust your filters to find more events.')
+          ->with('notice', 'Check back later for more events.')
+          ->with('alert', 'New events are added regularly!');
     }
 
 

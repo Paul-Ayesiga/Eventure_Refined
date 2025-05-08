@@ -192,7 +192,15 @@ class EventDetail extends Component
         return view('livewire.user.event-detail', [
             'totalPrice' => $this->getTotalPrice(),
             'totalTickets' => $this->getTotalSelectedTickets()
-        ])->layout('components.layouts.public');
+        ])->layout('components.layouts.page', [
+            'title' => $this->event->name,
+            'description' => $this->event->description,
+            // 'keywords' => implode(',', $this->event->tags)
+        ])->with('success', 'Event details loaded successfully.')
+          ->with('error', 'Failed to load event details. Please try again later.')
+          ->with('info', 'No tickets available for this event.')
+          ->with('warning', 'Please adjust your ticket selection.')
+          ->with('notice', 'Check back later for more tickets.');
     }
 
 

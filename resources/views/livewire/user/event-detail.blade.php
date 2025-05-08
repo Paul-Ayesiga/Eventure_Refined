@@ -1,12 +1,21 @@
 <div class="bg-gray-100 dark:bg-gray-900 min-h-screen pb-12">
     <!-- Event Header -->
-    <div class="relative bg-cover bg-center h-64 md:h-96"
-        style="background-image: url('{{ $event->banner ? $event->banner : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80' }}');"
-        onerror="this.style.backgroundImage='url(https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80)';">
-        <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative bg-cover bg-center h-64 md:h-96">
+        <!-- Blur-up preview -->
+        <div class="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 transform opacity-50 transition-opacity duration-500"
+            style="background-image: url('{{ $event->banner ? $event->banner . '?quality=1' : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=1&w=20' }}');">
+        </div>
+        <!-- Main image -->
+        <img src="{{ $event->banner ? $event->banner : 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070' }}"
+            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+            alt="{{ $event->name }}"
+            loading="eager"
+            onload="this.previousElementSibling.style.opacity = 0;"
+            onerror="this.src='https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070'">
+        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60"></div>
         <div class="relative container mx-auto px-4 h-full flex flex-col justify-end pb-8">
             <!-- Back Button -->
-            <a href="{{ route('user.events') }}" class="inline-flex items-center text-white mb-4 hover:underline">
+            <a href="{{ route('user.events') }}" class="inline-flex items-center text-white mb-4 hover:underline ">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

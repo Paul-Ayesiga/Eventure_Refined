@@ -192,6 +192,11 @@ class AttendeeTicket extends Component
 
     public function render()
     {
-        return view('livewire.user.attendee-ticket')->layout('components.layouts.public');
+        return view('livewire.user.attendee-ticket')->layout('components.layouts.page', [
+            'title' => 'Attendee Ticket',
+            'description' => 'Your ticket details and QR code.',
+            'keywords' => 'ticket, QR code, event'
+        ])->with('success', 'Ticket loaded successfully.')
+          ->with('error', 'Failed to load ticket. Please try again later.');
     }
 }

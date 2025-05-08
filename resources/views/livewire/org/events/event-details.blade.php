@@ -396,58 +396,60 @@
                     <div class="mb-6">
                         <flux:label>Event Banners</flux:label>
                         <div class="mt-2 space-y-4">
-                            <!-- Existing banners with loader -->
+                            <!-- Image grid with optimized loading -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                @foreach ($banners as $index => $banner)
+                                @forelse(json_decode($event->banners ?? '[]', true) as $index => $banner)
                                     <div class="relative group">
                                         <!-- Banner skeleton loader with preview -->
                                         <div class="relative w-full h-40 rounded-lg overflow-hidden">
+                                            <!-- Low-quality preview -->
+                                            <div class="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 transform opacity-50 transition-opacity duration-500"
+                                                style="background-image: url('{{ $banner }}?quality=1&w=20');">
+                                            </div>
                                             <!-- Skeleton loader -->
-                                            <div
-                                                class="absolute inset-0 skeleton-loader shimmer flex items-center justify-center">
+                                            <div class="absolute inset-0 skeleton-loader shimmer flex items-center justify-center transition-opacity duration-300">
                                                 <div class="flex flex-col items-center">
-                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mb-2"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
+                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading
-                                                        banner...</span>
+                                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading banner...</span>
                                                 </div>
                                             </div>
-                                            <!-- Image -->
-                                            <img src="{{ $banner }}" alt="Event banner"
-                                                class="w-full h-40 object-cover relative z-10"
-                                                onload="this.style.opacity='1'; this.previousElementSibling.style.display='none';"
-                                                onerror="this.style.display='none'; this.previousElementSibling.innerHTML='<div class=\'flex flex-col items-center\'><svg class=\'w-8 h-8 text-gray-400 dark:text-gray-600 mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg><span class=\'text-sm text-gray-500 dark:text-gray-400\'>Failed to load image</span></div>';"
-                                                style="opacity: 0; transition: opacity 0.3s ease;" />
+                                            <!-- Main image -->
+                                            <img src="{{ $banner }}" alt="Event banner" class="w-full h-40 object-cover relative z-10 transition-opacity duration-500"
+                                                loading="lazy"
+                                                onload="this.previousElementSibling.style.opacity = 0; this.previousElementSibling.previousElementSibling.style.opacity = 0;"
+                                                onerror="this.style.display='none'; this.previousElementSibling.innerHTML='<div class=\'flex flex-col items-center\'><svg class=\'w-8 h-8 text-gray-400 dark:text-gray-600 mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg><span class=\'text-sm text-gray-500 dark:text-gray-400\'>Failed to load image</span></div>';">
                                         </div>
+
                                         <!-- Hover overlay for delete -->
-                                        <div
-                                            class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center z-20">
-                                            <flux:button wire:click="removeBanner({{ $index }})"
-                                                variant="danger" class="bg-opacity-90">
+                                        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center z-20">
+                                            <flux:button wire:click="removeBanner({{ $index }})" variant="danger" class="bg-opacity-90">
                                                 Remove
                                             </flux:button>
                                         </div>
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="col-span-2 flex items-center justify-center h-40 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <div class="text-center">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No banners added yet</p>
+                                        </div>
+                                    </div>
+                                @endforelse
                             </div>
 
                             <!-- Upload new banners -->
-                            <div
-                                class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 transition-all duration-300 hover:border-teal-500 dark:hover:border-teal-400">
-                                <input type="file" wire:model="tempBanners" class="hidden" id="banner-upload"
-                                    multiple accept="image/*">
-                                <label for="banner-upload"
-                                    class="cursor-pointer flex flex-col items-center justify-center text-gray-600 dark:text-gray-400">
-                                    <div
-                                        class="rounded-full bg-gray-100 dark:bg-gray-700 p-4 mb-3 transition-colors duration-300 group-hover:bg-teal-50 dark:group-hover:bg-teal-900">
-                                        <svg class="w-8 h-8" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 transition-all duration-300 hover:border-teal-500 dark:hover:border-teal-400">
+                                <input type="file" wire:model="tempBanners" class="hidden" id="banner-upload" multiple accept="image/*">
+                                <label for="banner-upload" class="cursor-pointer flex flex-col items-center justify-center text-gray-600 dark:text-gray-400">
+                                    <div class="rounded-full bg-gray-100 dark:bg-gray-700 p-4 mb-3 transition-colors duration-300 group-hover:bg-teal-50 dark:group-hover:bg-teal-900">
+                                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
                                     </div>
                                     <span class="text-sm font-medium">Click to upload banners</span>
@@ -458,20 +460,12 @@
                                 <div wire:loading wire:target="tempBanners" class="mt-4">
                                     <div class="flex items-center justify-center space-x-2">
                                         <div class="w-2 h-2 rounded-full bg-teal-500 animate-bounce"></div>
-                                        <div class="w-2 h-2 rounded-full bg-teal-500 animate-bounce"
-                                            style="animation-delay: 0.2s"></div>
-                                        <div class="w-2 h-2 rounded-full bg-teal-500 animate-bounce"
-                                            style="animation-delay: 0.4s"></div>
+                                        <div class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 0.2s"></div>
+                                        <div class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 0.4s"></div>
                                     </div>
-                                    <p class="text-sm text-center text-gray-500 dark:text-gray-400 mt-2">Uploading...
-                                    </p>
+                                    <p class="text-sm text-center text-gray-500 dark:text-gray-400 mt-2">Uploading...</p>
                                 </div>
                             </div>
-
-                            <!-- Error messages -->
-                            @error('tempBanners.*')
-                                <p class="mt-2 text-sm text-red-600 dark:text-red-500">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
                 </div>
@@ -701,39 +695,35 @@
                                     <div class="relative">
                                         <!-- Banner skeleton loader with preview -->
                                         <div class="relative w-full h-40 rounded-lg overflow-hidden">
+                                            <!-- Low-quality preview -->
+                                            <div class="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 transform opacity-50 transition-opacity duration-500"
+                                                style="background-image: url('{{ $banner }}?quality=1&w=20');">
+                                            </div>
                                             <!-- Skeleton loader -->
-                                            <div
-                                                class="absolute inset-0 skeleton-loader shimmer flex items-center justify-center">
+                                            <div class="absolute inset-0 skeleton-loader shimmer flex items-center justify-center transition-opacity duration-300">
                                                 <div class="flex flex-col items-center">
-                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mb-2"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
+                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading
-                                                        banner...</span>
+                                                    <span class="text-sm text-gray-500 dark:text-gray-400">Loading banner...</span>
                                                 </div>
                                             </div>
-                                            <!-- Image -->
-                                            <img src="{{ $banner }}" alt="Event banner"
-                                                class="w-full h-40 object-cover relative z-10"
-                                                onload="this.style.opacity='1'; this.previousElementSibling.style.display='none';"
-                                                onerror="this.style.display='none'; this.previousElementSibling.innerHTML='<div class=\'flex flex-col items-center\'><svg class=\'w-8 h-8 text-gray-400 dark:text-gray-600 mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg><span class=\'text-sm text-gray-500 dark:text-gray-400\'>Failed to load image</span></div>';"
-                                                style="opacity: 0; transition: opacity 0.3s ease;" />
+                                            <!-- Main image -->
+                                            <img src="{{ $banner }}" alt="Event banner" class="w-full h-40 object-cover relative z-10 transition-opacity duration-500"
+                                                loading="lazy"
+                                                onload="this.previousElementSibling.style.opacity = 0; this.previousElementSibling.previousElementSibling.style.opacity = 0;"
+                                                onerror="this.style.display='none'; this.previousElementSibling.innerHTML='<div class=\'flex flex-col items-center\'><svg class=\'w-8 h-8 text-gray-400 dark:text-gray-600 mb-2\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg><span class=\'text-sm text-gray-500 dark:text-gray-400\'>Failed to load image</span></div>';">
                                         </div>
                                     </div>
                                 @empty
-                                    <div
-                                        class="flex items-center justify-center h-40 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div class="col-span-2 flex items-center justify-center h-40 bg-gray-50 dark:bg-gray-800 rounded-lg">
                                         <div class="text-center">
-                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
-                                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No banners added
-                                            </p>
+                                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No banners added yet</p>
                                         </div>
                                     </div>
                                 @endforelse

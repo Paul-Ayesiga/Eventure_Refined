@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Organisation;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +13,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
+        // Create test user
+        $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Run Role seeder first
+        $this->call(RoleSeeder::class);
+
+        // Create test organization
+        Organisation::create([
+            'user_id' => $user->id,
+            'name' => 'Test Organization',
+            'email' => 'org@example.com',
+            'phone_number' => '1234567890',
+            'country' => 'United States',
+            'currency' => 'USD'
+        ]);
+
+        // Run Event seeder
+        $this->call(EventSeeder::class);
     }
 }

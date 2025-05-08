@@ -6,6 +6,12 @@ use Illuminate\Support\Facades\Route;
 // Public homepage
 Route::get('/', App\Livewire\Public\Homepage::class)->name('home');
 
+// Public pages
+Route::get('/features', App\Livewire\Public\Features::class)->name('features');
+Route::get('/pricing', App\Livewire\Public\Pricing::class)->name('pricing');
+Route::get('/how-it-works', App\Livewire\Public\HowItWorks::class)->name('how-it-works');
+Route::get('/contact', App\Livewire\Public\Contact::class)->name('contact');
+
 
 
 
@@ -54,7 +60,7 @@ Route::prefix('org')->middleware(['auth', 'verified', 'check.organiser'])->group
     Route::view('billing-details', 'organisation.billing-details')->name('billing-details');
     Route::view('subscription', 'organisation.subscription')->name('subscription');
     Route::get('merchandise', fn() => null)->name('merchandise');
-    Route::get('help-support', fn() => null)->name('help-support');
+    Route::view('help-support', 'organisation.help-support')->name('help-support');
 
     // Event routes
     Route::view('event/{id}/details', 'organisation.event-details')->name('event-details');
@@ -64,7 +70,8 @@ Route::prefix('org')->middleware(['auth', 'verified', 'check.organiser'])->group
     Route::view('event/{id}/settings', 'organisation.event-settings')->name('event-settings');
 });
 
-
+// Support route
+Route::view('support', 'support')->name('support');
 
 // event details routes for organiser to manage events
 Route::middleware(['auth', 'verified', 'check.organiser'])->group(function () {

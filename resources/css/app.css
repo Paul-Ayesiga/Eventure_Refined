@@ -405,3 +405,56 @@ only screen and (min-resolution: 1.25dppx) {
     width: 400px;
     height: 100px;
 }
+
+/* Image loading optimization styles */
+.skeleton-loader {
+    @apply bg-gray-200 dark:bg-gray-700 relative overflow-hidden;
+}
+
+.shimmer {
+    @apply relative overflow-hidden;
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+    background: linear-gradient(90deg,
+        rgba(55, 65, 81, 0) 0%,
+        rgba(55, 65, 81, 0.2) 50%,
+        rgba(55, 65, 81, 0) 100%);
+    background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Blur-up image loading */
+.blur-up {
+    filter: blur(5px);
+    transition: filter 0.3s ease-out;
+}
+
+.blur-up.loaded {
+    filter: blur(0);
+}
+
+/* Image container aspect ratio */
+.aspect-ratio-box {
+    position: relative;
+    padding-top: 56.25%; /* 16:9 Aspect Ratio */
+}
+
+.aspect-ratio-box img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

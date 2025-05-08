@@ -44,4 +44,8 @@ return [
         'callback_url' => env('MPESA_CALLBACK_URL'),
     ],
 
+    'mistral' => [
+        'api_key' => env('MISTRAL_API_KEY'),
+    ],
+
 ];

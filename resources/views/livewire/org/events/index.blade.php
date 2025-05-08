@@ -42,7 +42,7 @@ new class extends Component {
         'status' => 'required|string|max:50',
     ];
 
-    public function mount($organisationId = null)
+    public function mount( int $organisationId = null)
     {
         $this->organisationId = $organisationId;
         $this->fetchEvents();
@@ -77,11 +77,11 @@ new class extends Component {
     {
         // If organization ID is provided, use it
         if ($this->organisationId) {
-            $query = Event::where('organisation_id', $this->organisationId)->where('name', 'ilike', '%' . $this->search . '%');
+            $query = Event::where('organisation_id', $this->organisationId)->where('name', 'like', '%' . $this->search . '%');
         } else {
             // Fallback to all user's organizations
             $userOrganisations = Auth::user()->organisations()->pluck('id');
-            $query = Event::whereIn('organisation_id', $userOrganisations)->where('name', 'ilike', '%' . $this->search . '%');
+            $query = Event::whereIn('organisation_id', $userOrganisations)->where('name', 'like', '%' . $this->search . '%');
         }
 
         if (trim($this->eventTypeSelected) !== '') {
@@ -480,15 +480,29 @@ new class extends Component {
                 <div class="border-b dark:border-gray-700 p-4">
                     <div class="flex items-start">
                         <!-- Event image -->
-                        <div class="w-24 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg mr-4 overflow-hidden">
+                        <div class="w-24 h-16 bg-gray-200 dark:bg-gray-700 rounded-lg mr-4 overflow-hidden relative">
                             @if ($event->banners && count(json_decode($event->banners, true)) > 0)
-                                <img src="{{ json_decode($event->banners, true)[0] }}" alt="{{ $event->name }}"
-                                    class="w-full h-full object-cover"
-                                    onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNNCAxNmw0LjU4Ni00LjU4NmEyIDIgMCAwMTIuODI4IDBMMTYgMTZtLTItMmwxLjU4Ni0xLjU4NmEyIDIgMCAwMTIuODI4IDBMMjAgMTRtLTYtNmguMDFNNiAyMGgxMmEyIDIgMCAwMDItMlY2YTIgMiAwIDAwLTItMkg2YTIgMiAwIDAwLTIgMnYxMmEyIDIgMCAwMDIgMnoiLz48L3N2Zz4='">
+                                <!-- Low quality image preview -->
+                                <div class="absolute inset-0 bg-cover bg-center filter blur-xl scale-110 transform opacity-50 transition-opacity duration-500"
+                                    style="background-image: url('{{ json_decode($event->banners, true)[0] }}?quality=1&w=20');">
+                                </div>
+                                <!-- Skeleton loader -->
+                                <div class="absolute inset-0 skeleton-loader shimmer flex items-center justify-center transition-opacity duration-300">
+                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <!-- Main image -->
+                                <img src="{{ json_decode($event->banners, true)[0] }}"
+                                    alt="{{ $event->name }}"
+                                    class="w-full h-full object-cover relative z-10 transition-opacity duration-500"
+                                    loading="lazy"
+                                    onload="this.previousElementSibling.style.opacity = 0; this.previousElementSibling.previousElementSibling.style.opacity = 0;"
+                                    onerror="this.style.display='none'; this.previousElementSibling.innerHTML='<svg class=\'w-6 h-6 text-gray-400 dark:text-gray-500\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\' /></svg>';">
                             @else
                                 <div class="w-full h-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none"
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400 dark:text-gray-500" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -683,6 +697,8 @@ new class extends Component {
                 query: '',
                 suggestions: [],
                 isLoading: false,
+
+                // edevaour to find ur own api keys
                 locationiqKey: 'pk.8da423155473007977a90bb555d54b41',
 
                 async fetchSuggestions() {
